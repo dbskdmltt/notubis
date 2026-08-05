@@ -264,20 +264,20 @@
   <section id="panel-common">
     <div class="step-label">STEP 3</div>
     <h2>③ 코수·단수 계산 — 앞장·뒷장 공통 입력</h2>
-    <p class="desc">앞장과 뒷장은 목깊이를 제외하고 같은 수치를 씁니다. 여기서 한 번만 입력하면 아래 앞장/뒷장 탭에 모두 적용됩니다.</p>
+    <p class="desc">앞장과 뒷장은 목깊이를 제외하고 같은 수치를 씁니다. 전체길이는 세로(총장), 가슴너비는 가로 폭입니다. 목깊이는 앞장/뒷장 탭에서 각각 입력합니다.</p>
 
     <div class="row">
       <div class="field">
-        <label>① 전체길이 (cm) — 어깨~어깨 폭</label>
-        <input type="number" id="pc-top" step="0.1" placeholder="예: 17">
+        <label>① 전체길이 (cm) — 총장(세로)</label>
+        <input type="number" id="pc-top" step="0.1" placeholder="예: 60">
       </div>
       <div class="field">
-        <label>② 가로길이 (cm) — 몸통(가슴) 폭</label>
-        <input type="number" id="pc-bottom" step="0.1" placeholder="예: 20">
+        <label>② 가슴너비 (cm) — 몸판 폭(가로)</label>
+        <input type="number" id="pc-bottom" step="0.1" placeholder="예: 50">
       </div>
       <div class="field">
         <label>③ 목너비 (cm)</label>
-        <input type="number" id="pc-neck" step="0.1" placeholder="예: 7">
+        <input type="number" id="pc-neck" step="0.1" placeholder="예: 18">
       </div>
     </div>
     <div class="desc" style="margin:-4px 0 10px;">하단 고무단은 7cm 고정입니다 (게이지로 자동 환산).</div>
@@ -288,16 +288,33 @@
       <div class="steps" id="pc-steps"></div>
       <ul class="groups" id="pc-groups"></ul>
 
-      <div class="subblock" id="pc-armhole-block" style="display:none;">
-        <h3 style="font-size:0.95rem; margin:0 0 4px;">진동(암홀) 곡선 <span class="badge">자동 계산</span></h3>
-        <p class="desc">진동콧수×1/4=중심막음코, 나머지÷2=카브산줄임코 → 카브산줄임코를 1/3→1/2→2/3 순으로 나눠 되돌아뜨기 단계를 만듭니다. 앞장·뒷장에 동일하게 적용됩니다.</p>
-        <div class="steps" id="pc-armhole-steps"></div>
-        <ul class="groups" id="pc-armhole-groups"></ul>
-        <div class="check" id="pc-armhole-check"></div>
-      </div>
-
       <p class="desc" style="margin:14px 0 6px;">계산된 수치를 실제 축척으로 그린 도식입니다.</p>
       <svg id="panel-svg" class="schematic-svg" viewBox="0 0 320 300" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+  </section>
+
+  <!-- ===================== 진동(암홀) 공통 계산 ===================== -->
+  <section id="armhole-common">
+    <h2>진동(암홀) 줄임 <span class="badge">자동 계산</span></h2>
+    <p class="desc">고대콧수(진동에서 줄일 총 콧수)를 입력하면 막음코 × 1/3 → 나머지 × 1/2 → 나머지 × 2/3 순으로 나눠 되돌아뜨기 단계를 만듭니다. 앞장·뒷장에 동일하게 적용됩니다.</p>
+
+    <div class="row">
+      <div class="field">
+        <label>암홀길이 (cm)</label>
+        <input type="number" id="ac-length" step="0.1" placeholder="예: 20">
+      </div>
+      <div class="field">
+        <label>고대콧수 (진동 줄임 콧수)</label>
+        <input type="number" id="ac-total" step="1" placeholder="예: 12">
+      </div>
+    </div>
+    <button class="calc-btn" id="ac-calc-btn">계산하기</button>
+
+    <div class="result" id="ac-result">
+      <div class="headline" id="ac-headline"></div>
+      <div class="steps" id="ac-steps"></div>
+      <ul class="groups" id="ac-groups"></ul>
+      <div class="check" id="ac-check"></div>
     </div>
   </section>
 
@@ -309,17 +326,32 @@
   </div>
 
   <section id="tab-front" class="tab-panel active">
-    <p class="desc">위 공통 입력값을 그대로 사용합니다. 목곡선과 진동(암홀) 곡선은 모두 위 STEP 3 결과에 자동으로 계산되어 있습니다 (앞장·뒷장 동일).</p>
-    <div class="desc" style="margin:0 0 14px;">목곡선(고정): 매단 되돌아뜨기 <b>1코 → 2코 → 3코</b> (좌우 대칭, 크기와 무관하게 항상 고정)</div>
-  </section>
-
-  <section id="tab-back" class="tab-panel">
-    <p class="desc">공통 입력값은 그대로 쓰고, 목깊이만 추가로 입력하면 목둘레 곡선을 계산합니다. 진동(암홀) 곡선은 앞장과 동일하며 위 STEP 3 결과를 그대로 씁니다.</p>
+    <p class="desc">위 공통 입력값을 그대로 사용합니다. 진동(암홀) 곡선은 위 진동 계산 결과를 그대로 씁니다. 목깊이만 따로 입력하면 목둘레 곡선을 계산합니다.</p>
 
     <div class="row">
       <div class="field">
         <label>목깊이 (cm)</label>
-        <input type="number" id="bp-depth" step="0.1" placeholder="예: 2">
+        <input type="number" id="fp-depth" step="0.1" placeholder="예: 8">
+      </div>
+    </div>
+    <button class="calc-btn" id="fp-calc-btn">목둘레 곡선 계산</button>
+
+    <div class="result" id="fp-result">
+      <div class="headline" id="fp-headline"></div>
+      <div class="steps" id="fp-steps"></div>
+      <ul class="groups" id="fp-groups"></ul>
+      <div class="check" id="fp-check"></div>
+      <svg id="fp-neck-svg" class="schematic-svg" viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+  </section>
+
+  <section id="tab-back" class="tab-panel">
+    <p class="desc">공통 입력값은 그대로 쓰고, 목깊이만 따로 입력하면 목둘레 곡선을 계산합니다. 진동(암홀) 곡선은 앞장과 동일하며 위 진동 계산 결과를 그대로 씁니다.</p>
+
+    <div class="row">
+      <div class="field">
+        <label>목깊이 (cm)</label>
+        <input type="number" id="bp-depth" step="0.1" placeholder="예: 3">
       </div>
     </div>
     <button class="calc-btn" id="bp-calc-btn">목둘레 곡선 계산</button>
@@ -1129,30 +1161,27 @@
       ' L ' + hl + ' ' + hemY + ' Z';
   }
 
-  function drawPanelSchematic(topCm, bottomCm, neckCm, topSt, bottomSt, neckSt){
+  function drawPanelSchematic(bodyCm, neckCm, bodySt, neckSt){
     var svg = document.getElementById('panel-svg');
     var vbW = 320, vbH = 300;
-    var maxW = Math.max(topCm, bottomCm, 1);
-    var pxPerCm = (vbW - 60) / maxW;
+    var pxPerCm = (vbW - 60) / Math.max(bodyCm, 1);
     var h = 200;
-    var topW = topCm * pxPerCm, bottomW = bottomCm * pxPerCm, neckW = Math.min(neckCm, topCm) * pxPerCm;
+    var bodyW = bodyCm * pxPerCm, neckW = Math.min(neckCm, bodyCm) * pxPerCm;
     var cx = vbW / 2, topY = 56, underarmY = topY + h * 0.22, hemY = topY + h;
-    var l = cx - topW / 2, r = cx + topW / 2;
-    var hl = cx - bottomW / 2, hr = cx + bottomW / 2;
+    var l = cx - bodyW / 2, r = cx + bodyW / 2;
     var nl = cx - neckW / 2, nr = cx + neckW / 2;
 
-    var path = bodyPanelPath(l, r, hl, hr, nl, nr, topY, underarmY, hemY);
+    var path = bodyPanelPath(l, r, l, r, nl, nr, topY, underarmY, hemY);
 
     svg.setAttribute('viewBox', '0 0 ' + vbW + ' ' + vbH);
     svg.innerHTML =
       '<path class="sch-shape" d="' + path + '"></path>' +
       '<text class="sch-label" x="' + cx + '" y="' + (topY - 14) + '" text-anchor="middle">목 ' + neckCm + 'cm(' + neckSt + '코)</text>' +
-      '<text class="sch-label" x="' + cx + '" y="' + (topY + 16) + '" text-anchor="middle">상단 ' + topCm + 'cm(' + topSt + '코)</text>' +
-      '<text class="sch-label" x="' + cx + '" y="' + (hemY + 20) + '" text-anchor="middle">하단 ' + bottomCm + 'cm(' + bottomSt + '코)</text>';
+      '<text class="sch-label" x="' + cx + '" y="' + (hemY + 20) + '" text-anchor="middle">가슴너비 ' + bodyCm + 'cm(' + bodySt + '코)</text>';
   }
 
-  function drawNeckSchematic(stepArr, depthCm, depthSt){
-    var svg = document.getElementById('neck-svg');
+  function drawNeckSchematic(stepArr, depthCm, depthRows, svgId){
+    var svg = document.getElementById(svgId || 'neck-svg');
     var vbW = 320;
     var maxSt = Math.max.apply(null, stepArr.concat([1]));
     var pxPerSt = 220 / maxSt;
@@ -1168,7 +1197,7 @@
     svg.setAttribute('viewBox', '0 0 ' + vbW + ' ' + vbH);
     svg.innerHTML =
       '<path class="sch-step" d="' + d + '"></path>' +
-      '<text class="sch-label-sub" x="16" y="' + (vbH - 12) + '">목깊이 ' + depthCm + 'cm(' + depthSt + '코) · 계단: ' + stepArr.join('-') + '</text>';
+      '<text class="sch-label-sub" x="16" y="' + (vbH - 12) + '">목깊이 ' + depthCm + 'cm(' + depthRows + '단) · 계단: ' + stepArr.join('-') + '</text>';
   }
 
   function drawSleeveSchematic(lenCm, topCm, bottomCm, lenRows, topSt, bottomSt){
@@ -1203,7 +1232,7 @@
   function armholeSummaryText(ah){
     if (!ah) return '계산 필요';
     var c = ah.cascade;
-    var parts = [ah.centerBind + '코(중심)'];
+    var parts = [];
     if (c.bindOff > 0) parts.push(c.bindOff + '코(막음)');
     if (c.tier1 > 0) parts.push('1단×' + c.tier1 + '회');
     if (c.tier2 > 0) parts.push('2단×' + c.tier2 + '회');
@@ -1216,28 +1245,25 @@
     return steps.join('-');
   }
 
-  function drawColumnPanel(x, w, title, top, bottom, neck, depth, armholeSummary){
-    var pxPerCm = (top && bottom) ? (w - 40) / Math.max(top.cm, bottom.cm, 1) : 6;
+  function drawColumnPanel(x, w, title, body, neck, depth, armholeSummary){
+    var pxPerCm = body ? (w - 40) / Math.max(body.cm, 1) : 6;
     var h = 220;
-    var topW = top ? top.cm * pxPerCm : w * 0.5;
-    var bottomW = bottom ? bottom.cm * pxPerCm : w * 0.6;
-    var neckW = neck ? Math.min(neck.cm, top ? top.cm : 99) * pxPerCm : topW * 0.3;
+    var bodyW = body ? body.cm * pxPerCm : w * 0.6;
+    var neckW = neck ? Math.min(neck.cm, body ? body.cm : 99) * pxPerCm : bodyW * 0.3;
     var cx = x + w / 2, topY = 56, underarmY = topY + h * 0.22, hemY = topY + h;
-    var l = cx - topW / 2, r = cx + topW / 2;
-    var hl = cx - bottomW / 2, hr = cx + bottomW / 2;
+    var l = cx - bodyW / 2, r = cx + bodyW / 2;
     var nl = cx - neckW / 2, nr = cx + neckW / 2;
-    var path = bodyPanelPath(l, r, hl, hr, nl, nr, topY, underarmY, hemY);
-    var shapeClass = (top && bottom) ? 'sch-shape' : 'sch-shape sch-placeholder';
+    var path = bodyPanelPath(l, r, l, r, nl, nr, topY, underarmY, hemY);
+    var shapeClass = body ? 'sch-shape' : 'sch-shape sch-placeholder';
     var parts = [];
     parts.push('<text class="sch-title" x="' + cx + '" y="20" text-anchor="middle">' + title + '</text>');
     parts.push('<path class="' + shapeClass + '" d="' + path + '"></path>');
     parts.push('<text class="sch-label" x="' + cx + '" y="' + (topY - 14) + '" text-anchor="middle">목 ' + fmtSt(neck) + '</text>');
-    parts.push('<text class="sch-label" x="' + cx + '" y="' + (topY + 14) + '" text-anchor="middle">상단 ' + fmtSt(top) + '</text>');
-    parts.push('<text class="sch-label" x="' + cx + '" y="' + (hemY + 18) + '" text-anchor="middle">하단 ' + fmtSt(bottom) + '</text>');
+    parts.push('<text class="sch-label" x="' + cx + '" y="' + (hemY + 18) + '" text-anchor="middle">가슴너비 ' + fmtSt(body) + '</text>');
     if (depth){
-      parts.push('<text class="sch-label-sub" x="' + cx + '" y="' + (topY + 30) + '" text-anchor="middle">목깊이 ' + fmtSt(depth) + '</text>');
+      parts.push('<text class="sch-label-sub" x="' + cx + '" y="' + (topY + 20) + '" text-anchor="middle">목깊이 ' + fmtRow(depth) + '</text>');
     }
-    parts.push('<text class="sch-label-sub" x="' + cx + '" y="' + (hemY + 34) + '" text-anchor="middle">암홀: ' + armholeSummary + '</text>');
+    parts.push('<text class="sch-label-sub" x="' + cx + '" y="' + (hemY + 34) + '" text-anchor="middle">진동: ' + armholeSummary + '</text>');
     return parts.join('');
   }
 
@@ -1268,8 +1294,8 @@
     if (!svg) return;
     var vbW = 760, vbH = 440;
     var colW = 235;
-    var back = drawColumnPanel(10, colW, '뒤판', patternState.top, patternState.bottom, patternState.neck, patternState.neckDepth, armholeSummaryText(patternState.armhole));
-    var front = drawColumnPanel(10 + colW + 20, colW, '앞판', patternState.top, patternState.bottom, patternState.neck, null, armholeSummaryText(patternState.armhole));
+    var back = drawColumnPanel(10, colW, '뒤판', patternState.body, patternState.neck, patternState.neckDepth, armholeSummaryText(patternState.armhole));
+    var front = drawColumnPanel(10 + colW + 20, colW, '앞판', patternState.body, patternState.neck, patternState.frontNeckDepth, armholeSummaryText(patternState.armhole));
     var sleeveHtml = drawSleeveColumn(10 + (colW + 20) * 2, colW, patternState.sleeve, patternState.sleeveTaper, patternState.sleeveCap);
     svg.setAttribute('viewBox', '0 0 ' + vbW + ' ' + vbH);
     svg.innerHTML = back + front + sleeveHtml;
@@ -1383,47 +1409,43 @@
 
   // ---------- 앞장·뒷장 공통 입력 ----------
   document.getElementById('pc-calc-btn').addEventListener('click', function(){
-    var topCm = parseFloat(document.getElementById('pc-top').value);
-    var bottomCm = parseFloat(document.getElementById('pc-bottom').value);
+    var lengthCm = parseFloat(document.getElementById('pc-top').value);
+    var bodyCm = parseFloat(document.getElementById('pc-bottom').value);
     var neckCm = parseFloat(document.getElementById('pc-neck').value);
     var resultBox = document.getElementById('pc-result');
     var headline = document.getElementById('pc-headline');
     var steps = document.getElementById('pc-steps');
     var groupsEl = document.getElementById('pc-groups');
-    var armholeBlock = document.getElementById('pc-armhole-block');
 
-    if (isNaN(topCm) || isNaN(bottomCm) || isNaN(neckCm) || topCm<=0 || bottomCm<=0 || neckCm<=0){
+    if (isNaN(lengthCm) || isNaN(bodyCm) || isNaN(neckCm) || lengthCm<=0 || bodyCm<=0 || neckCm<=0){
       resultBox.classList.add('show');
-      headline.textContent = '전체길이·가로길이·목너비를 모두 입력해주세요.';
+      headline.textContent = '전체길이·가슴너비·목너비를 모두 입력해주세요.';
       headline.style.color = 'var(--warn)';
       steps.textContent = ''; groupsEl.innerHTML = '';
-      armholeBlock.style.display = 'none';
       return;
     }
 
-    var topSt = Math.round(topCm * gauge.stPerCm);
-    var bottomSt = Math.round(bottomCm * gauge.stPerCm);
+    var totalRows = Math.round(lengthCm * gauge.rwPerCm);
+    var bodySt = Math.round(bodyCm * gauge.stPerCm);
     var neckSt = Math.round(neckCm * gauge.stPerCm);
-    var shoulderSt = Math.floor((topSt - neckSt) / 2);
-    var diffSt = bottomSt - topSt;
+    var shoulderSt = Math.floor((bodySt - neckSt) / 2);
     var ribRows = Math.round(7 * gauge.rwPerCm);
 
     headline.textContent = '공통 계산 결과';
     headline.style.color = 'var(--ok)';
     steps.textContent =
-      '전체길이(어깨~어깨) = ' + topCm + 'cm → ' + topSt + '코\n' +
-      '가로길이(가슴폭) = ' + bottomCm + 'cm → ' + bottomSt + '코\n' +
+      '전체길이(총장) = ' + lengthCm + 'cm → ' + totalRows + '단\n' +
+      '가슴너비(몸판폭) = ' + bodyCm + 'cm → ' + bodySt + '코\n' +
       '목너비 = ' + neckCm + 'cm → ' + neckSt + '코\n' +
-      '어깨너비(한쪽) = (전체길이콧수 - 목콧수) ÷ 2 = (' + topSt + ' - ' + neckSt + ') ÷ 2 = ' + shoulderSt + '코\n' +
-      '가로길이-전체길이 차이 = ' + bottomSt + ' - ' + topSt + ' = ' + diffSt + '코 (양쪽 진동 합)\n' +
+      '어깨너비(한쪽) = (몸판코수 - 목코수) ÷ 2 = (' + bodySt + ' - ' + neckSt + ') ÷ 2 = ' + shoulderSt + '코\n' +
       '고무단(고정) = 7cm → ' + ribRows + '단';
 
     groupsEl.innerHTML = '';
     [
-      ['전체길이 콧수', topSt + '코'],
-      ['가로길이 콧수', bottomSt + '코'],
+      ['전체단수', totalRows + '단'],
+      ['몸판코수', bodySt + '코'],
       ['목 콧수', neckSt + '코'],
-      ['어깨너비(한쪽)', shoulderSt + '코'],
+      ['어깨너비(좌/우 각각)', shoulderSt + '코'],
       ['고무단(고정 7cm)', ribRows + '단']
     ].forEach(function(r){
       var li = document.createElement('li');
@@ -1432,77 +1454,84 @@
     });
 
     resultBox.classList.add('show');
-    drawPanelSchematic(topCm, bottomCm, neckCm, topSt, bottomSt, neckSt);
+    drawPanelSchematic(bodyCm, neckCm, bodySt, neckSt);
 
-    patternState.top = { cm: topCm, st: topSt };
-    patternState.bottom = { cm: bottomCm, st: bottomSt };
+    patternState.length = { cm: lengthCm, rows: totalRows };
+    patternState.body = { cm: bodyCm, st: bodySt };
     patternState.neck = { cm: neckCm, st: neckSt };
     patternState.shoulder = { st: shoulderSt };
     patternState.rib = { cm: 7, rows: ribRows };
 
-    // 진동(암홀) 곡선: 진동콧수×1/4=중심막음코, 나머지÷2=카브산줄임코 → 1/3→1/2→2/3 캐스케이드
-    var ahStepsEl = document.getElementById('pc-armhole-steps');
-    var ahGroupsEl = document.getElementById('pc-armhole-groups');
-    var ahCheckEl = document.getElementById('pc-armhole-check');
+    renderFinalSchematic();
+  });
 
-    if (diffSt <= 0){
-      armholeBlock.style.display = 'none';
+  // ---------- 진동(암홀) 공통 계산: 고대콧수 → 1/3→1/2→2/3 캐스케이드 ----------
+  document.getElementById('ac-calc-btn').addEventListener('click', function(){
+    var lenCm = parseFloat(document.getElementById('ac-length').value);
+    var total = Math.round(parseFloat(document.getElementById('ac-total').value));
+    var resultBox = document.getElementById('ac-result');
+    var headline = document.getElementById('ac-headline');
+    var steps = document.getElementById('ac-steps');
+    var groupsEl = document.getElementById('ac-groups');
+    var checkEl = document.getElementById('ac-check');
+
+    if (isNaN(total) || total <= 0){
+      resultBox.classList.add('show');
+      headline.textContent = '고대콧수(진동 줄임 콧수)를 입력해주세요.';
+      headline.style.color = 'var(--warn)';
+      steps.textContent = ''; groupsEl.innerHTML = ''; checkEl.textContent = '';
       patternState.armhole = null;
-    } else {
-      var centerBind = Math.floor(diffSt * (1/4));
-      var rem0 = diffSt - centerBind;
-      var curveSt = Math.floor(rem0 / 2);
-      var casc = cascadeThirds(curveSt);
-
-      ahStepsEl.textContent =
-        '진동콧수(양쪽 합) = ' + diffSt + '\n' +
-        '중심막음코 = 진동콧수 × 1/4 = ' + centerBind + ' (버림)\n' +
-        '나머지 = ' + diffSt + ' - ' + centerBind + ' = ' + rem0 + '\n' +
-        '카브산줄임코(한쪽) = 나머지 ÷ 2 = ' + curveSt + ' (버림)\n' +
-        '막음코 = 카브산줄임코 × 1/3 = ' + casc.bindOff + ' (버림)\n' +
-        '1단마다 그룹 = 나머지1 × 1/2 = ' + casc.tier1 + ' (버림)\n' +
-        '2단마다 그룹 = 나머지2 × 2/3 = ' + casc.tier2 + ' (버림)\n' +
-        '3단마다 그룹 = 나머지2 - ' + casc.tier2 + ' = ' + casc.tier3;
-
-      ahGroupsEl.innerHTML = '';
-      var ahRows = [
-        ['막음코(한번에)', centerBind + '코'],
-        ['카브산 막음코', casc.bindOff + '코'],
-        ['1단마다 1코씩 되돌아뜨기', casc.tier1 + '회'],
-        ['2단마다 1코씩 되돌아뜨기', casc.tier2 + '회'],
-        ['3단마다 1코씩 되돌아뜨기', casc.tier3 + '회']
-      ];
-      ahRows.forEach(function(r){
-        if (parseInt(r[1], 10) <= 0) return;
-        var li = document.createElement('li');
-        li.innerHTML = '<span>' + r[0] + '</span><span>' + r[1] + '</span>';
-        ahGroupsEl.appendChild(li);
-      });
-
-      var casSum = casc.bindOff + casc.tier1 + casc.tier2 + casc.tier3; // = curveSt (한쪽)
-      var leftoverHalf = rem0 - curveSt * 2; // 좌우로 나눌 때 남는 홀수 코 (0 또는 1)
-      var ahSum = centerBind + curveSt * 2 + leftoverHalf;
-      var ahOk = (casSum === curveSt) && (ahSum === diffSt);
-      ahCheckEl.className = 'check' + (ahOk ? '' : ' bad');
-      ahCheckEl.textContent = '검산: 한쪽 카브산 합계 ' + casSum + '/' + curveSt +
-        '  ·  전체(막음코+양쪽카브산' + (leftoverHalf ? '+나머지' + leftoverHalf : '') + ') ' + ahSum + '/' + diffSt +
-        (ahOk ? ' ✓ 일치' : ' ✗ 불일치');
-
-      armholeBlock.style.display = 'block';
-      patternState.armhole = { diffSt: diffSt, centerBind: centerBind, curveSt: curveSt, cascade: casc };
+      renderFinalSchematic();
+      return;
     }
+    headline.style.color = 'var(--ok)';
 
+    var lenRows = (!isNaN(lenCm) && lenCm > 0) ? Math.round(lenCm * gauge.rwPerCm) : null;
+    var casc = cascadeThirds(total);
+
+    headline.textContent = '진동(암홀) 줄임 결과';
+    steps.textContent =
+      (lenRows != null ? '암홀길이 = ' + lenCm + 'cm → ' + lenRows + '단 (참고용)\n' : '') +
+      '고대콧수 = ' + total + '\n' +
+      '중심막음 = 고대콧수 × 1/3 = ' + casc.bindOff + ' (버림)\n' +
+      '남은코 = ' + total + ' - ' + casc.bindOff + ' = ' + casc.rem1 + '\n' +
+      '1단마다 그룹 = 남은코 × 1/2 = ' + casc.tier1 + ' (버림)\n' +
+      '나머지 = ' + casc.rem1 + ' - ' + casc.tier1 + ' = ' + casc.rem2 + '\n' +
+      '2단마다 그룹 = 나머지 × 2/3 = ' + casc.tier2 + ' (버림)\n' +
+      '3단마다 그룹 = 나머지 - ' + casc.tier2 + ' = ' + casc.tier3;
+
+    groupsEl.innerHTML = '';
+    [
+      ['중심막음(한번에)', casc.bindOff + '코'],
+      ['1단마다 1코씩 되돌아뜨기', casc.tier1 + '회'],
+      ['2단마다 1코씩 되돌아뜨기', casc.tier2 + '회'],
+      ['3단마다 1코씩 되돌아뜨기', casc.tier3 + '회']
+    ].forEach(function(r){
+      if (parseInt(r[1], 10) <= 0) return;
+      var li = document.createElement('li');
+      li.innerHTML = '<span>' + r[0] + '</span><span>' + r[1] + '</span>';
+      groupsEl.appendChild(li);
+    });
+
+    var sum = casc.bindOff + casc.tier1 + casc.tier2 + casc.tier3;
+    var ok = sum === total;
+    checkEl.className = 'check' + (ok ? '' : ' bad');
+    checkEl.textContent = '검산: 합계 ' + sum + ' / 목표 ' + total + (ok ? ' ✓ 일치' : ' ✗ 불일치');
+    resultBox.classList.add('show');
+
+    patternState.armhole = { total: total, lenCm: lenCm, lenRows: lenRows, cascade: casc };
     renderFinalSchematic();
   });
 
   // ---------- 뒷장: 목깊이 → 목둘레 곡선(333222111 순환확장 방식) ----------
-  document.getElementById('bp-calc-btn').addEventListener('click', function(){
-    var depthCm = parseFloat(document.getElementById('bp-depth').value);
-    var resultBox = document.getElementById('bp-result');
-    var headline = document.getElementById('bp-headline');
-    var steps = document.getElementById('bp-steps');
-    var groupsEl = document.getElementById('bp-groups');
-    var checkEl = document.getElementById('bp-check');
+  // ---------- 목둘레 곡선 (앞장·뒷장 공용, 목깊이는 단수로 환산) ----------
+  function computeNeckCurve(prefix, svgId, panelLabel, stateKey){
+    var depthCm = parseFloat(document.getElementById(prefix + '-depth').value);
+    var resultBox = document.getElementById(prefix + '-result');
+    var headline = document.getElementById(prefix + '-headline');
+    var steps = document.getElementById(prefix + '-steps');
+    var groupsEl = document.getElementById(prefix + '-groups');
+    var checkEl = document.getElementById(prefix + '-check');
 
     if (isNaN(depthCm) || depthCm <= 0){
       resultBox.classList.add('show');
@@ -1513,31 +1542,38 @@
     }
     headline.style.color = 'var(--ok)';
 
-    var depthSt = Math.round(depthCm * gauge.stPerCm);
-    var res = generateArmholeSteps(depthSt);
+    var depthRows = Math.round(depthCm * gauge.rwPerCm);
+    var res = generateArmholeSteps(depthRows);
 
-    headline.textContent = '뒷장 목둘레 곡선 결과';
+    headline.textContent = panelLabel + ' 목둘레 곡선 결과';
     steps.textContent =
-      '목깊이 = ' + depthCm + 'cm → ' + depthSt + '코 (게이지로 콧수 환산)\n' +
+      '목깊이 = ' + depthCm + 'cm → ' + depthRows + '단 (게이지로 단수 환산)\n' +
       '사용 단계값 범위 = 1~' + res.n + ' (기본 3회씩, 기본합 = ' + res.base + ')' +
-      (depthSt > res.base ? '\n추가분 = ' + (depthSt - res.base) + ' → 1→2→3…순으로 순환 추가' : '') +
-      (res.leftover > 0 ? '\n⚠ 정확히 나누어떨어지지 않아 ' + res.leftover + '코가 남습니다 (목깊이를 인접값으로 조정 권장)' : '');
+      (depthRows > res.base ? '\n추가분 = ' + (depthRows - res.base) + ' → 1→2→3…순으로 순환 추가' : '') +
+      (res.leftover > 0 ? '\n⚠ 정확히 나누어떨어지지 않아 ' + res.leftover + '단이 남습니다 (목깊이를 인접값으로 조정 권장)' : '');
 
     groupsEl.innerHTML = '';
     var li0 = document.createElement('li');
     li0.innerHTML = '<span>단계 시퀀스 (스텝 수 ' + res.steps.length + ')</span><span>' + res.steps.join(', ') + '</span>';
     groupsEl.appendChild(li0);
 
-    var ok = res.achieved === depthSt;
+    var ok = res.achieved === depthRows;
     checkEl.className = 'check' + (ok ? '' : ' bad');
-    checkEl.textContent = '검산: 시퀀스 합계 ' + res.achieved + ' / 목표 ' + depthSt +
-      (ok ? ' ✓ 일치' : ' ✗ 근사치 (남는 ' + res.leftover + '코, 목깊이 조정 권장)');
+    checkEl.textContent = '검산: 시퀀스 합계 ' + res.achieved + ' / 목표 ' + depthRows +
+      (ok ? ' ✓ 일치' : ' ✗ 근사치 (남는 ' + res.leftover + '단, 목깊이 조정 권장)');
     resultBox.classList.add('show');
 
-    drawNeckSchematic(res.steps, depthCm, depthSt);
+    drawNeckSchematic(res.steps, depthCm, depthRows, svgId);
 
-    patternState.neckDepth = { cm: depthCm, st: depthSt, steps: res.steps };
+    patternState[stateKey] = { cm: depthCm, rows: depthRows, steps: res.steps };
     renderFinalSchematic();
+  }
+
+  document.getElementById('fp-calc-btn').addEventListener('click', function(){
+    computeNeckCurve('fp', 'fp-neck-svg', '앞장', 'frontNeckDepth');
+  });
+  document.getElementById('bp-calc-btn').addEventListener('click', function(){
+    computeNeckCurve('bp', 'neck-svg', '뒷장', 'neckDepth');
   });
 
   // ---------- 소매 ----------
