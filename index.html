@@ -1124,6 +1124,29 @@
   });
 
   // ---------- 결과 도식(SVG) ----------
+  // 목선(스쿱)·진동(암홀) 곡선이 들어간 몸판 외곽선 경로
+  function bodyPanelPath(l, r, hl, hr, nl, nr, topY, underarmY, hemY){
+    var neckDip = Math.max(8, (underarmY - topY) * 0.55);
+    return 'M ' + l + ' ' + topY +
+      ' L ' + nl + ' ' + topY +
+      ' Q ' + ((nl + nr) / 2) + ' ' + (topY + neckDip) + ' ' + nr + ' ' + topY +
+      ' L ' + r + ' ' + topY +
+      ' Q ' + r + ' ' + underarmY + ' ' + hr + ' ' + underarmY +
+      ' L ' + hr + ' ' + hemY +
+      ' L ' + hl + ' ' + hemY +
+      ' L ' + hl + ' ' + underarmY +
+      ' Q ' + l + ' ' + underarmY + ' ' + l + ' ' + topY + ' Z';
+  }
+
+  // 소매산 돔 곡선이 들어간 소매 외곽선 경로
+  function sleevePanelPath(l, r, hl, hr, topY, hemY){
+    var domeH = Math.min(50, (r - l) * 0.24);
+    return 'M ' + l + ' ' + topY +
+      ' Q ' + ((l + r) / 2) + ' ' + (topY - domeH) + ' ' + r + ' ' + topY +
+      ' L ' + hr + ' ' + hemY +
+      ' L ' + hl + ' ' + hemY + ' Z';
+  }
+
   function drawPanelSchematic(topCm, bottomCm, neckCm, topSt, bottomSt, neckSt){
     var svg = document.getElementById('panel-svg');
     var vbW = 320, vbH = 300;
@@ -1131,25 +1154,17 @@
     var pxPerCm = (vbW - 60) / maxW;
     var h = 200;
     var topW = topCm * pxPerCm, bottomW = bottomCm * pxPerCm, neckW = Math.min(neckCm, topCm) * pxPerCm;
-    var cx = vbW / 2, topY = 46, underarmY = topY + h * 0.18, hemY = topY + h;
+    var cx = vbW / 2, topY = 56, underarmY = topY + h * 0.22, hemY = topY + h;
     var l = cx - topW / 2, r = cx + topW / 2;
     var hl = cx - bottomW / 2, hr = cx + bottomW / 2;
     var nl = cx - neckW / 2, nr = cx + neckW / 2;
 
-    var path = 'M ' + l + ' ' + topY +
-      ' L ' + r + ' ' + topY +
-      ' L ' + hr + ' ' + underarmY +
-      ' L ' + hr + ' ' + hemY +
-      ' L ' + hl + ' ' + hemY +
-      ' L ' + hl + ' ' + underarmY + ' Z';
+    var path = bodyPanelPath(l, r, hl, hr, nl, nr, topY, underarmY, hemY);
 
     svg.setAttribute('viewBox', '0 0 ' + vbW + ' ' + vbH);
     svg.innerHTML =
       '<path class="sch-shape" d="' + path + '"></path>' +
-      '<line class="sch-line" x1="' + nl + '" y1="' + (topY - 12) + '" x2="' + nl + '" y2="' + topY + '"></line>' +
-      '<line class="sch-line" x1="' + nr + '" y1="' + (topY - 12) + '" x2="' + nr + '" y2="' + topY + '"></line>' +
-      '<line class="sch-line" x1="' + nl + '" y1="' + (topY - 8) + '" x2="' + nr + '" y2="' + (topY - 8) + '"></line>' +
-      '<text class="sch-label" x="' + cx + '" y="' + (topY - 18) + '" text-anchor="middle">목 ' + neckCm + 'cm(' + neckSt + '코)</text>' +
+      '<text class="sch-label" x="' + cx + '" y="' + (topY - 14) + '" text-anchor="middle">목 ' + neckCm + 'cm(' + neckSt + '코)</text>' +
       '<text class="sch-label" x="' + cx + '" y="' + (topY + 16) + '" text-anchor="middle">상단 ' + topCm + 'cm(' + topSt + '코)</text>' +
       '<text class="sch-label" x="' + cx + '" y="' + (hemY + 20) + '" text-anchor="middle">하단 ' + bottomCm + 'cm(' + bottomSt + '코)</text>';
   }
@@ -1182,10 +1197,10 @@
     var maxH = vbH - 80;
     if (h > maxH){ pxPerCm *= (maxH / h); h = lenCm * pxPerCm; }
     var topW = topCm * pxPerCm, bottomW = bottomCm * pxPerCm;
-    var cx = vbW / 2, topY = 40, hemY = topY + h;
+    var cx = vbW / 2, topY = 60, hemY = topY + h;
     var l = cx - topW / 2, r = cx + topW / 2;
     var hl = cx - bottomW / 2, hr = cx + bottomW / 2;
-    var path = 'M ' + l + ' ' + topY + ' L ' + r + ' ' + topY + ' L ' + hr + ' ' + hemY + ' L ' + hl + ' ' + hemY + ' Z';
+    var path = sleevePanelPath(l, r, hl, hr, topY, hemY);
 
     svg.setAttribute('viewBox', '0 0 ' + vbW + ' ' + vbH);
     svg.innerHTML =
@@ -1210,19 +1225,15 @@
     var topW = top ? top.cm * pxPerCm : w * 0.5;
     var bottomW = bottom ? bottom.cm * pxPerCm : w * 0.6;
     var neckW = neck ? Math.min(neck.cm, top ? top.cm : 99) * pxPerCm : topW * 0.3;
-    var cx = x + w / 2, topY = 46, underarmY = topY + h * 0.18, hemY = topY + h;
+    var cx = x + w / 2, topY = 56, underarmY = topY + h * 0.22, hemY = topY + h;
     var l = cx - topW / 2, r = cx + topW / 2;
     var hl = cx - bottomW / 2, hr = cx + bottomW / 2;
     var nl = cx - neckW / 2, nr = cx + neckW / 2;
-    var path = 'M ' + l + ' ' + topY + ' L ' + r + ' ' + topY + ' L ' + hr + ' ' + underarmY +
-      ' L ' + hr + ' ' + hemY + ' L ' + hl + ' ' + hemY + ' L ' + hl + ' ' + underarmY + ' Z';
+    var path = bodyPanelPath(l, r, hl, hr, nl, nr, topY, underarmY, hemY);
     var shapeClass = (top && bottom) ? 'sch-shape' : 'sch-shape sch-placeholder';
     var parts = [];
     parts.push('<text class="sch-title" x="' + cx + '" y="20" text-anchor="middle">' + title + '</text>');
     parts.push('<path class="' + shapeClass + '" d="' + path + '"></path>');
-    parts.push('<line class="sch-line" x1="' + nl + '" y1="' + (topY - 10) + '" x2="' + nl + '" y2="' + topY + '"></line>');
-    parts.push('<line class="sch-line" x1="' + nr + '" y1="' + (topY - 10) + '" x2="' + nr + '" y2="' + topY + '"></line>');
-    parts.push('<line class="sch-line" x1="' + nl + '" y1="' + (topY - 6) + '" x2="' + nr + '" y2="' + (topY - 6) + '"></line>');
     parts.push('<text class="sch-label" x="' + cx + '" y="' + (topY - 14) + '" text-anchor="middle">목 ' + fmtSt(neck) + '</text>');
     parts.push('<text class="sch-label" x="' + cx + '" y="' + (topY + 14) + '" text-anchor="middle">상단 ' + fmtSt(top) + '</text>');
     parts.push('<text class="sch-label" x="' + cx + '" y="' + (hemY + 18) + '" text-anchor="middle">하단 ' + fmtSt(bottom) + '</text>');
@@ -1239,10 +1250,10 @@
     var h = sleeve ? Math.min(280, sleeve.length.cm * pxPerCm) : 220;
     var topW = sleeve ? sleeve.top.cm * pxPerCm : w * 0.5;
     var bottomW = sleeve ? sleeve.bottom.cm * pxPerCm : w * 0.3;
-    var topY = 46, hemY = topY + h;
+    var topY = 60, hemY = topY + h;
     var l = cx - topW / 2, r = cx + topW / 2;
     var hl = cx - bottomW / 2, hr = cx + bottomW / 2;
-    var path = 'M ' + l + ' ' + topY + ' L ' + r + ' ' + topY + ' L ' + hr + ' ' + hemY + ' L ' + hl + ' ' + hemY + ' Z';
+    var path = sleevePanelPath(l, r, hl, hr, topY, hemY);
     var shapeClass = sleeve ? 'sch-shape' : 'sch-shape sch-placeholder';
     var parts = [];
     parts.push('<text class="sch-title" x="' + cx + '" y="20" text-anchor="middle">소매</text>');
