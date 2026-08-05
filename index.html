@@ -164,6 +164,9 @@
   .sch-label{ fill:var(--ink); font-size:11px; font-weight:600; }
   .sch-label-sub{ fill:var(--sub); font-size:10px; }
   .sch-step{ fill:none; stroke:var(--accent); stroke-width:2; }
+  .final-svg{ max-width:760px; }
+  .sch-title{ fill:var(--sub); font-size:12px; font-weight:700; letter-spacing:0.03em; }
+  .sch-placeholder{ fill:var(--sub); opacity:0.5; }
 </style>
 </head>
 <body>
@@ -419,6 +422,13 @@
     </div>
   </section>
 
+  <!-- ===================== 완성 도안 ===================== -->
+  <section id="final-section">
+    <h2>완성 도안 <span class="badge">자동 생성</span></h2>
+    <p class="desc">위에서 계산한 값이 계산되는 즉시 아래 도안에 자동으로 채워집니다. 아직 계산하지 않은 항목은 물음표(?)로 표시됩니다.</p>
+    <svg id="final-svg" class="schematic-svg final-svg" viewBox="0 0 760 440" xmlns="http://www.w3.org/2000/svg"></svg>
+  </section>
+
   <!-- ===================== cm ↔ 코/단수 환산 ===================== -->
   <section id="conv-section">
     <h2>④ cm ↔ 코/단수 환산</h2>
@@ -624,6 +634,7 @@
 
   // ---------- 게이지 ----------
   var gauge = { stPerCm: 3.4, rwPerCm: 4.2 };
+  var patternState = {};
 
   function readGauge(){
     var wCm = parseFloat(document.getElementById('g-w-cm').value) || 0;
@@ -1184,6 +1195,77 @@
       '<text class="sch-label-sub" x="' + (Math.max(r, hr) + 8) + '" y="' + ((topY + hemY) / 2) + '">' + lenCm + 'cm(' + lenRows + '단)</text>';
   }
 
+  // ---------- 완성 도안 (뒤판·앞판·소매 통합) ----------
+  function fmtSt(v){ return v == null ? '?' : v.cm + 'cm(' + v.st + '코)'; }
+  function fmtRow(v){ return v == null ? '?' : v.cm + 'cm(' + v.rows + '단)'; }
+  function tierSummary(ordered){
+    if (!ordered) return '계산 필요';
+    if (ordered.length === 0) return '0코';
+    return ordered.map(function(g){ return g.interval + '단×' + g.count + '회'; }).join(', ');
+  }
+
+  function drawColumnPanel(x, w, title, top, bottom, neck, depth, armholeSummary){
+    var pxPerCm = (top && bottom) ? (w - 40) / Math.max(top.cm, bottom.cm, 1) : 6;
+    var h = 220;
+    var topW = top ? top.cm * pxPerCm : w * 0.5;
+    var bottomW = bottom ? bottom.cm * pxPerCm : w * 0.6;
+    var neckW = neck ? Math.min(neck.cm, top ? top.cm : 99) * pxPerCm : topW * 0.3;
+    var cx = x + w / 2, topY = 46, underarmY = topY + h * 0.18, hemY = topY + h;
+    var l = cx - topW / 2, r = cx + topW / 2;
+    var hl = cx - bottomW / 2, hr = cx + bottomW / 2;
+    var nl = cx - neckW / 2, nr = cx + neckW / 2;
+    var path = 'M ' + l + ' ' + topY + ' L ' + r + ' ' + topY + ' L ' + hr + ' ' + underarmY +
+      ' L ' + hr + ' ' + hemY + ' L ' + hl + ' ' + hemY + ' L ' + hl + ' ' + underarmY + ' Z';
+    var shapeClass = (top && bottom) ? 'sch-shape' : 'sch-shape sch-placeholder';
+    var parts = [];
+    parts.push('<text class="sch-title" x="' + cx + '" y="20" text-anchor="middle">' + title + '</text>');
+    parts.push('<path class="' + shapeClass + '" d="' + path + '"></path>');
+    parts.push('<line class="sch-line" x1="' + nl + '" y1="' + (topY - 10) + '" x2="' + nl + '" y2="' + topY + '"></line>');
+    parts.push('<line class="sch-line" x1="' + nr + '" y1="' + (topY - 10) + '" x2="' + nr + '" y2="' + topY + '"></line>');
+    parts.push('<line class="sch-line" x1="' + nl + '" y1="' + (topY - 6) + '" x2="' + nr + '" y2="' + (topY - 6) + '"></line>');
+    parts.push('<text class="sch-label" x="' + cx + '" y="' + (topY - 14) + '" text-anchor="middle">목 ' + fmtSt(neck) + '</text>');
+    parts.push('<text class="sch-label" x="' + cx + '" y="' + (topY + 14) + '" text-anchor="middle">상단 ' + fmtSt(top) + '</text>');
+    parts.push('<text class="sch-label" x="' + cx + '" y="' + (hemY + 18) + '" text-anchor="middle">하단 ' + fmtSt(bottom) + '</text>');
+    if (depth){
+      parts.push('<text class="sch-label-sub" x="' + cx + '" y="' + (topY + 30) + '" text-anchor="middle">목깊이 ' + fmtSt(depth) + '</text>');
+    }
+    parts.push('<text class="sch-label-sub" x="' + cx + '" y="' + (hemY + 34) + '" text-anchor="middle">암홀: ' + armholeSummary + '</text>');
+    return parts.join('');
+  }
+
+  function drawSleeveColumn(x, w, sleeve, taper){
+    var cx = x + w / 2;
+    var pxPerCm = sleeve ? (w - 60) / Math.max(sleeve.top.cm, sleeve.bottom.cm, 1) : 5;
+    var h = sleeve ? Math.min(280, sleeve.length.cm * pxPerCm) : 220;
+    var topW = sleeve ? sleeve.top.cm * pxPerCm : w * 0.5;
+    var bottomW = sleeve ? sleeve.bottom.cm * pxPerCm : w * 0.3;
+    var topY = 46, hemY = topY + h;
+    var l = cx - topW / 2, r = cx + topW / 2;
+    var hl = cx - bottomW / 2, hr = cx + bottomW / 2;
+    var path = 'M ' + l + ' ' + topY + ' L ' + r + ' ' + topY + ' L ' + hr + ' ' + hemY + ' L ' + hl + ' ' + hemY + ' Z';
+    var shapeClass = sleeve ? 'sch-shape' : 'sch-shape sch-placeholder';
+    var parts = [];
+    parts.push('<text class="sch-title" x="' + cx + '" y="20" text-anchor="middle">소매</text>');
+    parts.push('<path class="' + shapeClass + '" d="' + path + '"></path>');
+    parts.push('<text class="sch-label" x="' + cx + '" y="' + (topY - 14) + '" text-anchor="middle">소매산 ' + (sleeve ? fmtSt(sleeve.top) : '?') + '</text>');
+    parts.push('<text class="sch-label" x="' + cx + '" y="' + (hemY + 18) + '" text-anchor="middle">커프 ' + (sleeve ? fmtSt(sleeve.bottom) : '?') + '</text>');
+    parts.push('<text class="sch-label-sub" x="' + cx + '" y="' + (hemY + 34) + '" text-anchor="middle">기장 ' + (sleeve ? fmtRow(sleeve.length) : '?') + '</text>');
+    parts.push('<text class="sch-label-sub" x="' + cx + '" y="' + (hemY + 48) + '" text-anchor="middle">늘림: ' + tierSummary(taper) + '</text>');
+    return parts.join('');
+  }
+
+  function renderFinalSchematic(){
+    var svg = document.getElementById('final-svg');
+    if (!svg) return;
+    var vbW = 760, vbH = 440;
+    var colW = 235;
+    var back = drawColumnPanel(10, colW, '뒤판', patternState.top, patternState.bottom, patternState.neck, patternState.neckDepth, tierSummary(patternState.backArmhole));
+    var front = drawColumnPanel(10 + colW + 20, colW, '앞판', patternState.top, patternState.bottom, patternState.neck, null, tierSummary(patternState.frontArmhole));
+    var sleeveHtml = drawSleeveColumn(10 + (colW + 20) * 2, colW, patternState.sleeve, patternState.sleeveTaper);
+    svg.setAttribute('viewBox', '0 0 ' + vbW + ' ' + vbH);
+    svg.innerHTML = back + front + sleeveHtml;
+  }
+
   // ---------- 탭 전환 (앞장/뒷장/소매) ----------
   document.querySelectorAll('#panel-tabbar .tab-btn').forEach(function(btn){
     btn.addEventListener('click', function(){
@@ -1195,7 +1277,7 @@
   });
 
   // ---------- 다단 곡선분해 워크시트 (재사용 가능한 팩토리) ----------
-  function createTierWorksheet(prefix){
+  function createTierWorksheet(prefix, onUpdate){
     var tiers = [
       { interval: null, count: null },
       { interval: null, count: null },
@@ -1261,6 +1343,8 @@
         li.innerHTML = '<span>' + (idx+1) + '. ' + t.interval + '단마다 1코씩</span><span>' + t.count + '회</span>';
         resultEl.appendChild(li);
       });
+
+      if (onUpdate) onUpdate(ok ? ordered : null);
     }
 
     document.getElementById(prefix + '-tier-add').addEventListener('click', function(){
@@ -1283,9 +1367,18 @@
     };
   }
 
-  var fpWorksheet = createTierWorksheet('fp');
-  var bpWorksheet = createTierWorksheet('bp');
-  var slWorksheet = createTierWorksheet('sl');
+  var fpWorksheet = createTierWorksheet('fp', function(ordered){
+    patternState.frontArmhole = ordered;
+    renderFinalSchematic();
+  });
+  var bpWorksheet = createTierWorksheet('bp', function(ordered){
+    patternState.backArmhole = ordered;
+    renderFinalSchematic();
+  });
+  var slWorksheet = createTierWorksheet('sl', function(ordered){
+    patternState.sleeveTaper = ordered;
+    renderFinalSchematic();
+  });
 
   // ---------- 앞장·뒷장 공통 입력 ----------
   document.getElementById('pc-calc-btn').addEventListener('click', function(){
@@ -1351,6 +1444,13 @@
     document.getElementById('dg-bp-bottom').textContent = bottomLabel;
 
     drawPanelSchematic(topCm, bottomCm, neckCm, topSt, bottomSt, neckSt);
+
+    patternState.top = { cm: topCm, st: topSt };
+    patternState.bottom = { cm: bottomCm, st: bottomSt };
+    patternState.neck = { cm: neckCm, st: neckSt };
+    patternState.shoulder = { st: shoulderSt };
+    patternState.armholeTarget = target;
+    renderFinalSchematic();
   });
 
   // ---------- 뒷장: 목깊이 → 목둘레 곡선(카브산줄임 방식 재사용) ----------
@@ -1395,6 +1495,9 @@
     document.getElementById('dg-bp-depth').textContent = '목깊이 ' + depthCm + 'cm(' + depthSt + '코)';
 
     drawNeckSchematic(stair.steps, depthCm, depthSt);
+
+    patternState.neckDepth = { cm: depthCm, st: depthSt, steps: stair.steps };
+    renderFinalSchematic();
   });
 
   // ---------- 소매 ----------
@@ -1460,6 +1563,14 @@
     document.getElementById('dg-sl-bottom').textContent = bottomCm + 'cm(' + bottomSt + '코)';
 
     drawSleeveSchematic(lenCm, topCm, bottomCm, lenRows, topSt, bottomSt);
+
+    patternState.sleeve = {
+      length: { cm: lenCm, rows: lenRows },
+      top: { cm: topCm, st: topSt },
+      bottom: { cm: bottomCm, st: bottomSt },
+      target: target
+    };
+    renderFinalSchematic();
   });
 
   // ---------- STEP 2: 표준 치수 참고표 ----------
@@ -1578,6 +1689,7 @@
 
   // 초기화
   readGauge();
+  renderFinalSchematic();
 })();
 </script>
 </body>
