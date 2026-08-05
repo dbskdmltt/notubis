@@ -126,23 +126,6 @@
   }
   .dg-label:empty{ display:none; }
   .dg-label.accent{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
-  .silhouette-wrap{ margin-top:8px; }
-  #body-svg{
-    display:block; width:100%; max-width:340px; height:auto; margin:0 auto;
-    background:var(--panel); border:1px solid var(--line); border-radius:10px;
-  }
-  .silhouette-legend{
-    display:flex; gap:16px; justify-content:center; margin-top:8px; font-size:0.78rem; color:var(--sub);
-  }
-  .silhouette-legend i{
-    display:inline-block; width:12px; height:12px; border-radius:3px; margin-right:5px; vertical-align:-1px;
-  }
-  .silhouette-legend .sw-body{ background:var(--sub); opacity:0.35; }
-  .silhouette-legend .sw-garment{ border:2px dashed var(--accent); width:10px; height:10px; }
-  .sil-body{ fill:var(--sub); fill-opacity:0.28; stroke:var(--sub); stroke-width:1.5; }
-  .sil-garment{ fill:none; stroke:var(--accent); stroke-width:2; stroke-dasharray:6 4; }
-  .sil-text{ fill:var(--ink); font-size:12px; }
-  .sil-text-sub{ fill:var(--sub); font-size:11px; }
   .std-size-wrap{ margin-bottom:14px; }
   .std-size-scroll{ overflow-x:auto; border:1px solid var(--line); border-radius:8px; }
   .std-size-table{ width:100%; border-collapse:collapse; font-size:0.8rem; white-space:nowrap; }
@@ -271,17 +254,8 @@
       <div class="headline" id="fit-headline"></div>
       <div class="steps" id="fit-steps"></div>
       <div class="row" style="margin-top:8px;">
-        <button class="calc-btn secondary" id="fit-apply-bottom" type="button">↓ 하단길이(STEP 3)에 적용</button>
+        <button class="calc-btn secondary" id="fit-apply-bottom" type="button">↓ 가로길이(STEP 3)에 적용</button>
         <button class="calc-btn secondary" id="fit-apply-sleeve" type="button">↓ 소매기장(소매 탭)에 적용</button>
-      </div>
-
-      <div class="silhouette-wrap" id="silhouette-wrap">
-        <p class="desc" style="margin:14px 0 6px;">보디원형(실측) 위에 여유분을 더한 완성 실루엣입니다. 실제 축척(cm)대로 그려집니다.</p>
-        <svg id="body-svg" viewBox="0 0 340 420" xmlns="http://www.w3.org/2000/svg"></svg>
-        <div class="silhouette-legend">
-          <span><i class="sw-body"></i>실측 보디원형</span>
-          <span><i class="sw-garment"></i>완성 실루엣(+여유분)</span>
-        </div>
       </div>
     </div>
   </section>
@@ -1732,51 +1706,6 @@
   var fitFinishedChest = null;
   var fitSleeveLen = null;
 
-  function drawBodySilhouette(chestCm, finishedCm, lengthCmRaw){
-    var svg = document.getElementById('body-svg');
-    var vbW = 340, vbH = 420;
-    var lengthGiven = !!(lengthCmRaw && lengthCmRaw > 0);
-    var lenCm = lengthGiven ? lengthCmRaw : 55;
-
-    var pxPerCm = (vbW - 60) / finishedCm;
-    var bodyH = lenCm * pxPerCm;
-    var maxDrawH = vbH - 80;
-    if (bodyH > maxDrawH){
-      pxPerCm *= (maxDrawH / bodyH);
-      bodyH = lenCm * pxPerCm;
-    }
-
-    var bodyW = chestCm * pxPerCm;
-    var garmentW = finishedCm * pxPerCm;
-    var cx = vbW / 2;
-    var topY = 46;
-    var underarmY = topY + bodyH * 0.18;
-    var hemY = topY + bodyH;
-
-    function torsoPath(fullW, shoulderRatio, top, underarm, hem, pad){
-      var halfShoulder = (fullW * shoulderRatio) / 2 + pad;
-      var halfChest = fullW / 2 + pad;
-      var l = cx - halfShoulder, r = cx + halfShoulder;
-      var lu = cx - halfChest, ru = cx + halfChest;
-      return 'M ' + l + ' ' + (top - pad) +
-        ' L ' + r + ' ' + (top - pad) +
-        ' L ' + ru + ' ' + underarm +
-        ' L ' + ru + ' ' + (hem + pad) +
-        ' L ' + lu + ' ' + (hem + pad) +
-        ' L ' + lu + ' ' + underarm + ' Z';
-    }
-
-    var bodyPath = torsoPath(bodyW, 0.42, topY, underarmY, hemY, 0);
-    var garmentPath = torsoPath(garmentW, 0.5, topY, underarmY, hemY, 5);
-
-    svg.setAttribute('viewBox', '0 0 ' + vbW + ' ' + vbH);
-    svg.innerHTML =
-      '<path class="sil-body" d="' + bodyPath + '"></path>' +
-      '<path class="sil-garment" d="' + garmentPath + '"></path>' +
-      '<text class="sil-text" x="' + cx + '" y="22" text-anchor="middle">실측 ' + chestCm + 'cm · 완성 ' + finishedCm + 'cm (+' + (finishedCm - chestCm).toFixed(1) + 'cm)</text>' +
-      '<text class="sil-text-sub" x="' + cx + '" y="' + (hemY + 24) + '" text-anchor="middle">기장 ' + lenCm + 'cm' + (lengthGiven ? '' : ' (총장 미입력, 추정치)') + '</text>';
-  }
-
   document.getElementById('fit-calc-btn').addEventListener('click', function(){
     var chest = parseFloat(document.getElementById('fit-chest').value);
     var ease = parseFloat(document.getElementById('fit-ease').value);
@@ -1792,7 +1721,6 @@
       headline.style.color = 'var(--warn)';
       steps.textContent = '';
       fitFinishedChest = null;
-      document.getElementById('silhouette-wrap').style.display = 'none';
       return;
     }
     if (isNaN(ease)) ease = 0;
@@ -1806,9 +1734,6 @@
       '완성 가슴둘레 = 실측 ' + chest + 'cm + 여유분 ' + ease + 'cm = ' + fitFinishedChest + 'cm' +
       (fitSleeveLen != null ? '\n소매길이 = ' + fitSleeveLen + 'cm (그대로 사용)' : '');
     resultBox.classList.add('show');
-
-    document.getElementById('silhouette-wrap').style.display = 'block';
-    drawBodySilhouette(chest, fitFinishedChest, isNaN(lengthCm) ? null : lengthCm);
   });
 
   document.getElementById('fit-apply-bottom').addEventListener('click', function(){
