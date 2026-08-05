@@ -1161,23 +1161,27 @@
       ' L ' + hl + ' ' + hemY + ' Z';
   }
 
-  function drawPanelSchematic(bodyCm, neckCm, bodySt, neckSt){
+  function drawPanelSchematic(bodyCm, neckCm, bodySt, neckSt, armhole){
     var svg = document.getElementById('panel-svg');
     var vbW = 320, vbH = 300;
     var pxPerCm = (vbW - 60) / Math.max(bodyCm, 1);
+    var pxPerSt = pxPerCm / gauge.stPerCm;
     var h = 200;
     var bodyW = bodyCm * pxPerCm, neckW = Math.min(neckCm, bodyCm) * pxPerCm;
     var cx = vbW / 2, topY = 56, underarmY = topY + h * 0.22, hemY = topY + h;
-    var l = cx - bodyW / 2, r = cx + bodyW / 2;
+    var insetPx = armhole ? Math.min(armhole.total * pxPerSt, bodyW * 0.4) : 0;
+    var l = cx - bodyW / 2 + insetPx, r = cx + bodyW / 2 - insetPx;
+    var hl = cx - bodyW / 2, hr = cx + bodyW / 2;
     var nl = cx - neckW / 2, nr = cx + neckW / 2;
 
-    var path = bodyPanelPath(l, r, l, r, nl, nr, topY, underarmY, hemY);
+    var path = bodyPanelPath(l, r, hl, hr, nl, nr, topY, underarmY, hemY);
 
     svg.setAttribute('viewBox', '0 0 ' + vbW + ' ' + vbH);
     svg.innerHTML =
       '<path class="sch-shape" d="' + path + '"></path>' +
       '<text class="sch-label" x="' + cx + '" y="' + (topY - 14) + '" text-anchor="middle">목 ' + neckCm + 'cm(' + neckSt + '코)</text>' +
-      '<text class="sch-label" x="' + cx + '" y="' + (hemY + 20) + '" text-anchor="middle">가슴너비 ' + bodyCm + 'cm(' + bodySt + '코)</text>';
+      '<text class="sch-label" x="' + cx + '" y="' + (hemY + 20) + '" text-anchor="middle">가슴너비 ' + bodyCm + 'cm(' + bodySt + '코)</text>' +
+      (armhole ? '<text class="sch-label-sub" x="' + (hr + 6) + '" y="' + underarmY + '">진동 ' + armhole.total + '코</text>' : '');
   }
 
   function drawNeckSchematic(stepArr, depthCm, depthRows, svgId){
@@ -1245,15 +1249,18 @@
     return steps.join('-');
   }
 
-  function drawColumnPanel(x, w, title, body, neck, depth, armholeSummary){
+  function drawColumnPanel(x, w, title, body, neck, depth, armhole){
     var pxPerCm = body ? (w - 40) / Math.max(body.cm, 1) : 6;
+    var pxPerSt = pxPerCm / gauge.stPerCm;
     var h = 220;
     var bodyW = body ? body.cm * pxPerCm : w * 0.6;
     var neckW = neck ? Math.min(neck.cm, body ? body.cm : 99) * pxPerCm : bodyW * 0.3;
     var cx = x + w / 2, topY = 56, underarmY = topY + h * 0.22, hemY = topY + h;
-    var l = cx - bodyW / 2, r = cx + bodyW / 2;
+    var insetPx = armhole ? Math.min(armhole.total * pxPerSt, bodyW * 0.4) : 0;
+    var l = cx - bodyW / 2 + insetPx, r = cx + bodyW / 2 - insetPx;
+    var hl = cx - bodyW / 2, hr = cx + bodyW / 2;
     var nl = cx - neckW / 2, nr = cx + neckW / 2;
-    var path = bodyPanelPath(l, r, l, r, nl, nr, topY, underarmY, hemY);
+    var path = bodyPanelPath(l, r, hl, hr, nl, nr, topY, underarmY, hemY);
     var shapeClass = body ? 'sch-shape' : 'sch-shape sch-placeholder';
     var parts = [];
     parts.push('<text class="sch-title" x="' + cx + '" y="20" text-anchor="middle">' + title + '</text>');
@@ -1263,7 +1270,7 @@
     if (depth){
       parts.push('<text class="sch-label-sub" x="' + cx + '" y="' + (topY + 20) + '" text-anchor="middle">목깊이 ' + fmtRow(depth) + '</text>');
     }
-    parts.push('<text class="sch-label-sub" x="' + cx + '" y="' + (hemY + 34) + '" text-anchor="middle">진동: ' + armholeSummary + '</text>');
+    parts.push('<text class="sch-label-sub" x="' + cx + '" y="' + (hemY + 34) + '" text-anchor="middle">진동: ' + armholeSummaryText(armhole) + '</text>');
     return parts.join('');
   }
 
@@ -1294,8 +1301,8 @@
     if (!svg) return;
     var vbW = 760, vbH = 440;
     var colW = 235;
-    var back = drawColumnPanel(10, colW, '뒤판', patternState.body, patternState.neck, patternState.neckDepth, armholeSummaryText(patternState.armhole));
-    var front = drawColumnPanel(10 + colW + 20, colW, '앞판', patternState.body, patternState.neck, patternState.frontNeckDepth, armholeSummaryText(patternState.armhole));
+    var back = drawColumnPanel(10, colW, '뒤판', patternState.body, patternState.neck, patternState.neckDepth, patternState.armhole);
+    var front = drawColumnPanel(10 + colW + 20, colW, '앞판', patternState.body, patternState.neck, patternState.frontNeckDepth, patternState.armhole);
     var sleeveHtml = drawSleeveColumn(10 + (colW + 20) * 2, colW, patternState.sleeve, patternState.sleeveTaper, patternState.sleeveCap);
     svg.setAttribute('viewBox', '0 0 ' + vbW + ' ' + vbH);
     svg.innerHTML = back + front + sleeveHtml;
@@ -1454,7 +1461,7 @@
     });
 
     resultBox.classList.add('show');
-    drawPanelSchematic(bodyCm, neckCm, bodySt, neckSt);
+    drawPanelSchematic(bodyCm, neckCm, bodySt, neckSt, patternState.armhole);
 
     patternState.length = { cm: lengthCm, rows: totalRows };
     patternState.body = { cm: bodyCm, st: bodySt };
@@ -1520,6 +1527,9 @@
     resultBox.classList.add('show');
 
     patternState.armhole = { total: total, lenCm: lenCm, lenRows: lenRows, cascade: casc };
+    if (patternState.body && patternState.neck){
+      drawPanelSchematic(patternState.body.cm, patternState.neck.cm, patternState.body.st, patternState.neck.st, patternState.armhole);
+    }
     renderFinalSchematic();
   });
 
