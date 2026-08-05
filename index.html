@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOTUBIS — 수편기 패턴 계산기</title>
+<style>
+  :root{
+    --bg:#f6f3ee; --panel:#ffffff; --ink:#2b2620; --sub:#6b6255;
+    --accent:#a05c2c; --accent-ink:#ffffff; --line:#e3ddd2; --ok:#3f7a52; --warn:#b5482a;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#1c1a17; --panel:#26221d; --ink:#eee7db; --sub:#a89d8a;
+      --accent:#d98a4f; --accent-ink:#241a10; --line:#3a352c; --ok:#7fc999; --warn:#e08a6a; }
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:24px 16px 64px; background:var(--bg); color:var(--ink);
+    font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    line-height:1.55;
+  }
+  .wrap{max-width:760px; margin:0 auto;}
+  header{margin-bottom:20px;}
+  h1{font-size:1.5rem; margin:0 0 4px;}
+  .tagline{color:var(--sub); font-size:0.88rem; margin:0 0 10px;}
+  .notice{
+    background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--accent);
+    padding:10px 14px; border-radius:8px; font-size:0.84rem; color:var(--sub);
+  }
+  section{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:18px 18px 20px; margin-top:18px;
+  }
+  h2{font-size:1.05rem; margin:0 0 4px; display:flex; align-items:center; gap:8px;}
+  .badge{
+    font-size:0.68rem; background:var(--accent); color:var(--accent-ink);
+    padding:2px 8px; border-radius:20px; font-weight:600;
+  }
+  .desc{color:var(--sub); font-size:0.82rem; margin:0 0 14px;}
+  .row{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; align-items:flex-end;}
+  .field{display:flex; flex-direction:column; gap:4px; min-width:110px; flex:1;}
+  label{font-size:0.78rem; color:var(--sub);}
+  input[type=number], select{
+    padding:9px 10px; border-radius:8px; border:1px solid var(--line);
+    background:var(--bg); color:var(--ink); font-size:0.95rem; width:100%;
+  }
+  .seg{display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; flex:2; min-width:220px;}
+  .seg button{
+    flex:1; border:none; background:var(--bg); color:var(--ink); padding:9px 8px;
+    font-size:0.82rem; cursor:pointer; border-right:1px solid var(--line);
+  }
+  .seg button:last-child{border-right:none;}
+  .seg button.active{background:var(--accent); color:var(--accent-ink); font-weight:600;}
+  .gaugeline{
+    font-size:0.85rem; color:var(--accent); font-weight:600; margin-top:6px;
+  }
+  .calc-btn{
+    margin-top:6px; background:var(--accent); color:var(--accent-ink); border:none;
+    padding:11px 18px; border-radius:8px; font-size:0.92rem; font-weight:600; cursor:pointer;
+  }
+  .calc-btn:hover{opacity:0.92;}
+  .result{
+    margin-top:14px; padding:14px; background:var(--bg); border-radius:10px;
+    border:1px solid var(--line); font-size:0.88rem; display:none;
+  }
+  .result.show{display:block;}
+  .result .headline{font-size:1.05rem; font-weight:700; color:var(--ok); margin-bottom:8px;}
+  .steps{color:var(--sub); font-size:0.82rem; white-space:pre-wrap; margin-bottom:10px; font-family:ui-monospace,Consolas,monospace;}
+  .groups{list-style:none; padding:0; margin:0 0 8px;}
+  .groups li{
+    padding:8px 10px; border:1px solid var(--line); border-radius:8px; margin-bottom:6px;
+    display:flex; justify-content:space-between; background:var(--panel);
+  }
+  .groups li.tail{color:var(--sub); font-style:italic;}
+  .check{font-size:0.78rem; color:var(--sub);}
+  .check.bad{color:var(--warn);}
+  .foot-note{font-size:0.75rem; color:var(--sub); margin-top:22px; text-align:center;}
+  .conv-out{font-size:0.9rem; margin-top:8px;}
+  .conv-out b{color:var(--accent);}
+  .ref-img{
+    display:block; max-width:100%; height:auto; margin:6px 0 16px; border-radius:10px;
+    border:1px solid var(--line); background:#fff;
+  }
+  .calc-btn.secondary{
+    background:transparent; color:var(--accent); border:1px dashed var(--accent);
+    padding:8px 14px; font-size:0.85rem; margin-top:4px;
+  }
+  .subblock{margin-top:16px; padding-top:14px; border-top:1px dashed var(--line);}
+  .tier-target{font-size:0.9rem; font-weight:600; color:var(--accent); margin-bottom:10px;}
+  .tier-row{
+    display:flex; gap:8px; align-items:center; margin-bottom:8px;
+  }
+  .tier-row span.tr-label{font-size:0.8rem; color:var(--sub); min-width:18px;}
+  .tier-row input[type=number]{width:auto; flex:1;}
+  .tier-row .tr-remove{
+    background:transparent; border:1px solid var(--line); color:var(--warn);
+    border-radius:8px; padding:8px 10px; cursor:pointer; font-size:0.8rem;
+  }
+  .tabbar{
+    display:flex; gap:6px; margin-top:18px; border-bottom:2px solid var(--line);
+  }
+  .tab-btn{
+    flex:1; background:transparent; border:none; padding:12px 8px; cursor:pointer;
+    font-size:0.95rem; font-weight:600; color:var(--sub); border-bottom:3px solid transparent;
+    margin-bottom:-2px;
+  }
+  .tab-btn.active{ color:var(--accent); border-bottom-color:var(--accent); }
+  .tab-panel{
+    background:var(--panel); border:1px solid var(--line); border-top:none;
+    border-radius:0 0 14px 14px; padding:18px 18px 20px; display:none;
+  }
+  .tab-panel.active{ display:block; }
+  .step-label{
+    display:inline-block; font-size:0.7rem; font-weight:700; letter-spacing:0.06em;
+    color:var(--accent); background:color-mix(in srgb, var(--accent) 14%, transparent);
+    padding:3px 9px; border-radius:20px; margin-bottom:8px;
+  }
+  .diagram-wrap{ position:relative; display:inline-block; max-width:100%; margin:6px 0 16px; }
+  .diagram-wrap .ref-img{ margin:0; }
+  .dg-label{
+    position:absolute; transform:translate(-50%, -50%);
+    background:#fff8ee; border:1px solid var(--accent); color:#7a4420;
+    font-size:11px; font-weight:700; line-height:1.3; padding:1px 6px;
+    border-radius:4px; white-space:nowrap; pointer-events:none;
+    box-shadow:0 1px 3px rgba(0,0,0,0.15);
+  }
+  .dg-label:empty{ display:none; }
+  .dg-label.accent{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  .silhouette-wrap{ margin-top:8px; }
+  #body-svg{
+    display:block; width:100%; max-width:340px; height:auto; margin:0 auto;
+    background:var(--panel); border:1px solid var(--line); border-radius:10px;
+  }
+  .silhouette-legend{
+    display:flex; gap:16px; justify-content:center; margin-top:8px; font-size:0.78rem; color:var(--sub);
+  }
+  .silhouette-legend i{
+    display:inline-block; width:12px; height:12px; border-radius:3px; margin-right:5px; vertical-align:-1px;
+  }
+  .silhouette-legend .sw-body{ background:var(--sub); opacity:0.35; }
+  .silhouette-legend .sw-garment{ border:2px dashed var(--accent); width:10px; height:10px; }
+  .sil-body{ fill:var(--sub); fill-opacity:0.28; stroke:var(--sub); stroke-width:1.5; }
+  .sil-garment{ fill:none; stroke:var(--accent); stroke-width:2; stroke-dasharray:6 4; }
+  .sil-text{ fill:var(--ink); font-size:12px; }
+  .sil-text-sub{ fill:var(--sub); font-size:11px; }
+  .std-size-wrap{ margin-bottom:14px; }
+  .std-size-scroll{ overflow-x:auto; border:1px solid var(--line); border-radius:8px; }
+  .std-size-table{ width:100%; border-collapse:collapse; font-size:0.8rem; white-space:nowrap; }
+  .std-size-table th, .std-size-table td{
+    padding:7px 10px; text-align:center; border-bottom:1px solid var(--line);
+    font-variant-numeric:tabular-nums;
+  }
+  .std-size-table th{ background:var(--bg); color:var(--sub); font-weight:600; }
+  .std-size-table td:first-child{ text-align:left; color:var(--ink); font-weight:600; }
+  .std-size-table tbody tr{ cursor:pointer; }
+  .std-size-table tbody tr:hover{ background:var(--bg); }
+  .std-size-table tbody tr:last-child td{ border-bottom:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>NOTUBIS</h1>
+    <p class="tagline">수편기(가정용 편물기) 패턴 코수·단수 계산기</p>
+    <div class="notice">
+      1차 버전(MVP)입니다. 게이지 환산, 코수·단수 분해(직선분해·곡선분해), 옆선 늘림/줄임 계산만 포함되어 있습니다.
+      어깨경사줄임·목둘레/진동 곡선·소매산 계산은 다음 버전에서 추가됩니다.
+      계산 결과는 반드시 직접 뜬 게이지 스와치와 대조해 확인하세요.
+    </div>
+  </header>
+
+  <!-- ===================== 게이지 설정 ===================== -->
+  <section id="gauge-section">
+    <div class="step-label">STEP 1</div>
+    <h2>① 게이지 내기</h2>
+    <p class="desc">
+      실제 사용할 실·바늘로 10cm×10cm 스와치를 떠서, 세탁·스팀 다림질 후 1cm당 코수·단수를 재세요.
+      이 숫자가 아래 모든 계산의 기준이 됩니다.
+    </p>
+
+    <div class="row">
+      <div class="field">
+        <label>스와치 가로 길이 (cm)</label>
+        <input type="number" id="g-w-cm" value="10" min="0.1" step="0.1">
+      </div>
+      <div class="field">
+        <label>그 안의 코수</label>
+        <input type="number" id="g-w-st" value="34" min="0.1" step="0.1">
+      </div>
+      <div class="field">
+        <label>스와치 세로 길이 (cm)</label>
+        <input type="number" id="g-h-cm" value="10" min="0.1" step="0.1">
+      </div>
+      <div class="field">
+        <label>그 안의 단수</label>
+        <input type="number" id="g-h-rw" value="42" min="0.1" step="0.1">
+      </div>
+    </div>
+    <div class="gaugeline" id="gauge-readout">1cm = 3.40코, 4.20단</div>
+  </section>
+
+  <!-- ===================== 원하는 치수 정하기 ===================== -->
+  <section id="fit-section">
+    <div class="step-label">STEP 2</div>
+    <h2>② 원하는 치수 정하기</h2>
+    <p class="desc">입을 사람의 실측 가슴둘레에 여유분(오버핏)을 더해 완성 치수를 정합니다. 계산된 값은 버튼 한 번으로 아래 입력칸에 바로 넣을 수 있습니다.</p>
+
+    <div class="std-size-wrap">
+      <p class="desc" style="margin:0 0 8px;">직접 재기 어렵다면 표준 치수를 참고하세요 (행을 클릭하면 아래 입력칸에 자동으로 채워집니다).</p>
+      <div class="std-size-scroll">
+        <table class="std-size-table" id="std-size-table">
+          <thead>
+            <tr><th>구분</th><th>가슴둘레</th><th>어깨너비</th><th>등길이</th><th>소매길이</th><th>진동둘레</th></tr>
+          </thead>
+          <tbody>
+            <tr data-chest="80" data-shoulder="33" data-length="36" data-sleeve="48" data-armhole="32"><td>여성·작은</td><td>80</td><td>33</td><td>36</td><td>48</td><td>32</td></tr>
+            <tr data-chest="84" data-shoulder="35" data-length="37" data-sleeve="50" data-armhole="34"><td>여성·표준</td><td>84</td><td>35</td><td>37</td><td>50</td><td>34</td></tr>
+            <tr data-chest="88" data-shoulder="37" data-length="38" data-sleeve="52" data-armhole="36"><td>여성·큰</td><td>88</td><td>37</td><td>38</td><td>52</td><td>36</td></tr>
+            <tr data-chest="88" data-shoulder="40" data-length="42" data-sleeve="53" data-armhole="38"><td>남성·작은</td><td>88</td><td>40</td><td>42</td><td>53</td><td>38</td></tr>
+            <tr data-chest="92" data-shoulder="42" data-length="45" data-sleeve="55" data-armhole="40"><td>남성·표준</td><td>92</td><td>42</td><td>45</td><td>55</td><td>40</td></tr>
+            <tr data-chest="96" data-shoulder="44" data-length="48" data-sleeve="57" data-armhole="42"><td>남성·큰</td><td>96</td><td>44</td><td>48</td><td>57</td><td>42</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label>실측 가슴둘레 (cm)</label>
+        <input type="number" id="fit-chest" step="0.1" placeholder="예: 90">
+      </div>
+      <div class="field">
+        <label>여유분 (cm)</label>
+        <input type="number" id="fit-ease" step="0.1" placeholder="예: 8" value="8">
+      </div>
+    </div>
+    <div class="row" style="margin-top:-4px;">
+      <div class="seg" id="ease-seg" style="max-width:360px;">
+        <button type="button" data-v="3">타이트 +3</button>
+        <button type="button" data-v="8" class="active">레귤러 +8</button>
+        <button type="button" data-v="13">오버핏 +13</button>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label>소매길이 (cm, 선택)</label>
+        <input type="number" id="fit-sleeve" step="0.1" placeholder="예: 55">
+      </div>
+      <div class="field">
+        <label>총장 (cm, 선택 — 그림 높이용)</label>
+        <input type="number" id="fit-length" step="0.1" placeholder="예: 58">
+      </div>
+    </div>
+
+    <button class="calc-btn" id="fit-calc-btn">완성 치수 계산</button>
+
+    <div class="result" id="fit-result">
+      <div class="headline" id="fit-headline"></div>
+      <div class="steps" id="fit-steps"></div>
+      <div class="row" style="margin-top:8px;">
+        <button class="calc-btn secondary" id="fit-apply-bottom" type="button">↓ 하단길이(STEP 3)에 적용</button>
+        <button class="calc-btn secondary" id="fit-apply-sleeve" type="button">↓ 소매기장(소매 탭)에 적용</button>
+      </div>
+
+      <div class="silhouette-wrap" id="silhouette-wrap">
+        <p class="desc" style="margin:14px 0 6px;">보디원형(실측) 위에 여유분을 더한 완성 실루엣입니다. 실제 축척(cm)대로 그려집니다.</p>
+        <svg id="body-svg" viewBox="0 0 340 420" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div class="silhouette-legend">
+          <span><i class="sw-body"></i>실측 보디원형</span>
+          <span><i class="sw-garment"></i>완성 실루엣(+여유분)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 앞장·뒷장 공통 입력 ===================== -->
+  <section id="panel-common">
+    <div class="step-label">STEP 3</div>
+    <h2>③ 코수·단수 계산 — 앞장·뒷장 공통 입력</h2>
+    <p class="desc">앞장과 뒷장은 목깊이를 제외하고 같은 수치를 씁니다. 여기서 한 번만 입력하면 아래 앞장/뒷장 탭에 모두 적용됩니다.</p>
+
+    <div class="diagram-wrap">
+      <img src="img/앞뒷장.png" alt="앞판/뒤판 도면" class="ref-img">
+      <span class="dg-label" id="dg-fp-top" style="left:50%; top:3%;"></span>
+      <span class="dg-label" id="dg-fp-bottom" style="left:50%; top:42%;"></span>
+      <span class="dg-label" id="dg-bp-top" style="left:50%; top:54%;"></span>
+      <span class="dg-label" id="dg-bp-bottom" style="left:50%; top:96%;"></span>
+      <span class="dg-label accent" id="dg-bp-depth" style="left:78%; top:57%;"></span>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label>① 상단길이 (cm) — 어깨~어깨 폭</label>
+        <input type="number" id="pc-top" step="0.1" placeholder="예: 17">
+      </div>
+      <div class="field">
+        <label>② 하단길이 (cm) — 몸통(가슴) 폭</label>
+        <input type="number" id="pc-bottom" step="0.1" placeholder="예: 20">
+      </div>
+      <div class="field">
+        <label>③ 목너비 (cm)</label>
+        <input type="number" id="pc-neck" step="0.1" placeholder="예: 7">
+      </div>
+    </div>
+    <button class="calc-btn" id="pc-calc-btn">계산하기</button>
+
+    <div class="result" id="pc-result">
+      <div class="headline" id="pc-headline">공통 계산 결과</div>
+      <div class="steps" id="pc-steps"></div>
+      <ul class="groups" id="pc-groups"></ul>
+    </div>
+  </section>
+
+  <!-- ===================== 탭: 앞장 / 뒷장 / 소매 ===================== -->
+  <div class="tabbar" id="panel-tabbar">
+    <button class="tab-btn active" data-tab="front">앞장</button>
+    <button class="tab-btn" data-tab="back">뒷장</button>
+    <button class="tab-btn" data-tab="sleeve">소매</button>
+  </div>
+
+  <section id="tab-front" class="tab-panel active">
+    <p class="desc">위 공통 입력값을 그대로 사용합니다. 목곡선은 크기와 무관하게 항상 고정입니다.</p>
+    <div class="desc" style="margin:0 0 14px;">목곡선(고정): 매단 되돌아뜨기 <b>3코 → 2코 → 1코</b> (각 1회)</div>
+
+    <div class="subblock" id="fp-armhole-block" style="margin-top:0; padding-top:0; border-top:none;">
+      <h3 style="font-size:0.95rem; margin:0 0 4px;">소매단(암홀) 다단 곡선분해 <span class="badge">직선분해</span></h3>
+      <p class="desc">한쪽 목표 콧수에 맞춰 간격(단)과 횟수를 자유롭게 입력하세요. 직선분해 규칙(횟수 작은 것부터)에 따라 자동 정렬됩니다.</p>
+      <div class="tier-target" id="fp-tier-target">공통 입력을 먼저 계산해주세요.</div>
+      <div id="fp-tier-rows"></div>
+      <button class="calc-btn secondary" id="fp-tier-add">+ 그룹 추가</button>
+      <div class="check" id="fp-tier-check" style="margin-top:10px;"></div>
+      <ol class="groups" id="fp-tier-result"></ol>
+    </div>
+  </section>
+
+  <section id="tab-back" class="tab-panel">
+    <p class="desc">공통 입력값은 그대로 쓰고, 목깊이만 추가로 입력하면 목둘레 곡선(카브산줄임 방식)을 계산합니다.</p>
+
+    <div class="row">
+      <div class="field">
+        <label>목깊이 (cm)</label>
+        <input type="number" id="bp-depth" step="0.1" placeholder="예: 2">
+      </div>
+    </div>
+    <button class="calc-btn" id="bp-calc-btn">목둘레 곡선 계산</button>
+
+    <div class="result" id="bp-result">
+      <div class="headline" id="bp-headline"></div>
+      <div class="steps" id="bp-steps"></div>
+      <ul class="groups" id="bp-groups"></ul>
+      <div class="check" id="bp-check"></div>
+    </div>
+
+    <div class="subblock" id="bp-armhole-block">
+      <h3 style="font-size:0.95rem; margin:18px 0 4px;">소매단(암홀) 다단 곡선분해 <span class="badge">직선분해</span></h3>
+      <p class="desc">앞장과 별도로 입력할 수 있습니다 (같은 목표 콧수 기준).</p>
+      <div class="tier-target" id="bp-tier-target">공통 입력을 먼저 계산해주세요.</div>
+      <div id="bp-tier-rows"></div>
+      <button class="calc-btn secondary" id="bp-tier-add">+ 그룹 추가</button>
+      <div class="check" id="bp-tier-check" style="margin-top:10px;"></div>
+      <ol class="groups" id="bp-tier-result"></ol>
+    </div>
+  </section>
+
+  <section id="tab-sleeve" class="tab-panel">
+    <p class="desc">소매기장·소매산 폭·소매부리(커프) 폭을 입력하면 콧수·단수로 환산하고, 커프~소매산 사이 늘림을 계산합니다. (소매산 곡선 자체는 공식 확인 후 추가 예정)</p>
+
+    <div class="diagram-wrap">
+      <img src="img/소매.png" alt="소매 도면" class="ref-img">
+      <span class="dg-label" id="dg-sl-top" style="left:50%; top:8%;"></span>
+      <span class="dg-label" id="dg-sl-length" style="left:87%; top:45%;"></span>
+      <span class="dg-label" id="dg-sl-bottom" style="left:50%; top:80%;"></span>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label>소매기장 (cm)</label>
+        <input type="number" id="sl-length" step="0.1" placeholder="예: 45">
+      </div>
+      <div class="field">
+        <label>소매산 폭 (cm) — 겨드랑이 부분</label>
+        <input type="number" id="sl-top" step="0.1" placeholder="예: 34">
+      </div>
+      <div class="field">
+        <label>소매부리(커프) 폭 (cm)</label>
+        <input type="number" id="sl-bottom" step="0.1" placeholder="예: 22">
+      </div>
+    </div>
+    <button class="calc-btn" id="sl-calc-btn">계산하기</button>
+
+    <div class="result" id="sl-result">
+      <div class="headline" id="sl-headline"></div>
+      <div class="steps" id="sl-steps"></div>
+      <ul class="groups" id="sl-groups"></ul>
+    </div>
+
+    <div class="subblock" id="sl-taper-block" style="display:none;">
+      <h3 style="font-size:0.95rem; margin:18px 0 4px;">커프~소매산 늘림 다단분해 <span class="badge">직선분해</span></h3>
+      <p class="desc">간격(단)과 횟수를 자유롭게 입력하세요.</p>
+      <div class="tier-target" id="sl-tier-target"></div>
+      <div id="sl-tier-rows"></div>
+      <button class="calc-btn secondary" id="sl-tier-add">+ 그룹 추가</button>
+      <div class="check" id="sl-tier-check" style="margin-top:10px;"></div>
+      <ol class="groups" id="sl-tier-result"></ol>
+    </div>
+  </section>
+
+  <!-- ===================== cm ↔ 코/단수 환산 ===================== -->
+  <section id="conv-section">
+    <h2>④ cm ↔ 코/단수 환산</h2>
+    <p class="desc">치수(cm)를 입력하면 현재 게이지 기준 코수·단수로 바로 환산합니다.</p>
+    <div class="row">
+      <div class="field">
+        <label>가로 길이 (cm)</label>
+        <input type="number" id="c-w" step="0.1" placeholder="예: 9">
+      </div>
+      <div class="field">
+        <label>세로 길이 (cm)</label>
+        <input type="number" id="c-h" step="0.1" placeholder="예: 6">
+      </div>
+      <div class="field" style="min-width:150px;">
+        <label>단수 반올림</label>
+        <select id="c-even">
+          <option value="round">일반 반올림</option>
+          <option value="even">짝수로 보정</option>
+        </select>
+      </div>
+    </div>
+    <div class="conv-out" id="conv-out">코수 / 단수 결과가 여기에 표시됩니다.</div>
+  </section>
+
+  <!-- ===================== 코수/단수 분해 계산기 ===================== -->
+  <section id="shape-section">
+    <h2>⑤ 코수·단수 분해 계산기 <span class="badge">직선분해 / 곡선분해</span></h2>
+    <p class="desc">옆선·소매·진동 등에서 일정 구간에 늘림(또는 줄임)을 고르게 배분합니다. 시작·끝 조건에 맞는 방식을 선택하세요.</p>
+
+    <div class="row">
+      <div class="field" style="flex:1 1 100%;">
+        <label>시작 · 끝 조건</label>
+        <div class="seg" id="scenario-seg">
+          <button data-v="flat-flat" class="active">평평→평평 (양끝 평단)</button>
+          <button data-v="flat-action">평평→늘림지점 (끝이 늘림)</button>
+          <button data-v="diagonal">완전사선 (지늘아뜨기)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- N: 코수 -->
+    <div class="row">
+      <div class="field" style="min-width:150px;">
+        <label>코수(늘림/줄임 수) 입력방식</label>
+        <div class="seg" id="n-mode-seg">
+          <button data-v="direct" class="active">코수 직접</button>
+          <button data-v="cm">cm으로</button>
+        </div>
+      </div>
+      <div class="field">
+        <label id="n-label">코수 (N)</label>
+        <input type="number" id="n-val" step="1" placeholder="예: 7">
+      </div>
+    </div>
+
+    <!-- R: 단수 -->
+    <div class="row" id="r-row">
+      <div class="field" style="min-width:150px;">
+        <label>단수(적용 구간) 입력방식</label>
+        <div class="seg" id="r-mode-seg">
+          <button data-v="direct" class="active">단수 직접</button>
+          <button data-v="cm">cm으로</button>
+        </div>
+      </div>
+      <div class="field">
+        <label id="r-label">단수 (R)</label>
+        <input type="number" id="r-val" step="1" placeholder="예: 50">
+      </div>
+    </div>
+
+    <!-- diagonal 전용: 고정 간격 -->
+    <div class="row" id="diag-row" style="display:none;">
+      <div class="field">
+        <label>고정 간격 (몇 단마다 늘림/줄임 하는 기법인지)</label>
+        <input type="number" id="diag-interval" value="2" min="1" step="1">
+      </div>
+    </div>
+
+    <!-- 직선/곡선 순서 -->
+    <div class="row" id="order-row">
+      <div class="field" style="flex:1 1 100%;">
+        <label>배분 순서</label>
+        <div class="seg" id="order-seg">
+          <button data-v="straight" class="active">직선분해 (횟수 적은 그룹 먼저)</button>
+          <button data-v="curve">곡선분해 (간격 넓은 그룹 먼저)</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="calc-btn" id="shape-calc-btn">계산하기</button>
+
+    <div class="result" id="shape-result">
+      <div class="headline" id="shape-headline"></div>
+      <div class="steps" id="shape-steps"></div>
+      <ul class="groups" id="shape-groups"></ul>
+      <div class="check" id="shape-check"></div>
+    </div>
+  </section>
+
+  <!-- ===================== 어깨경사줄임(되돌아뜨기) ===================== -->
+  <section id="shoulder-section">
+    <h2>⑥ 어깨경사줄임 계산기 <span class="badge">정중줄임 / 되돌아뜨기</span></h2>
+    <p class="desc">어깨 전체 줄임코를 막음코 + 되돌아뜨기 3단계로 나눕니다. (총×1/3 → 막음코, 나머지×1/2 → 1단마다, 나머지×2/3 → 2단마다, 최종 나머지 → 3단마다)</p>
+
+    <div class="row">
+      <div class="field">
+        <label>어깨 전체 줄임코수</label>
+        <input type="number" id="sh-total" step="1" placeholder="예: 22">
+      </div>
+    </div>
+    <button class="calc-btn" id="sh-calc-btn">계산하기</button>
+
+    <div class="result" id="sh-result">
+      <div class="headline" id="sh-headline"></div>
+      <div class="steps" id="sh-steps"></div>
+      <ul class="groups" id="sh-groups"></ul>
+      <div class="check" id="sh-check"></div>
+    </div>
+
+    <div class="subblock" id="sb-block">
+      <h3 style="font-size:0.95rem; margin:0 0 4px;">되돌아뜨기 균등분배 계산법 <span class="badge">책 기준(고대 균등)</span></h3>
+      <p class="desc">어깨콧수·어깨경사단수·되돌아뜨기 간격을 넣으면, 간격÷횟수로 되돌아뜨기 횟수를 구하고 어깨콧수를 (횟수+1)로 나눠 균등 분배합니다. 나머지 하나는 평단분(막음)으로 뺍니다.</p>
+
+      <div class="row">
+        <div class="field">
+          <label>어깨너비 콧수</label>
+          <input type="number" id="sb-stitches" step="1" placeholder="예: 18">
+        </div>
+        <div class="field">
+          <label>어깨경사 단수</label>
+          <input type="number" id="sb-rows" step="1" placeholder="예: 6">
+        </div>
+        <div class="field">
+          <label>되돌아뜨기 간격 (단)</label>
+          <input type="number" id="sb-interval" step="1" value="2" placeholder="예: 2">
+        </div>
+      </div>
+      <button class="calc-btn" id="sb-calc-btn">계산하기</button>
+
+      <div class="result" id="sb-result">
+        <div class="headline" id="sb-headline"></div>
+        <div class="steps" id="sb-steps"></div>
+        <ul class="groups" id="sb-groups"></ul>
+        <div class="check" id="sb-check"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 목둘레 카브산줄임 ===================== -->
+  <section id="neck-section">
+    <h2>⑦ 목둘레 커브(카브산) 줄임 계산기</h2>
+    <p class="desc">고대콧수(목둘레 전체 콧수)로 중심막음코와 양쪽 카브산줄임코를 구하고, 삼각수 계단식(k, k-1, … , 1)으로 분해합니다.</p>
+
+    <div class="row">
+      <div class="field">
+        <label>고대콧수 (목둘레 전체)</label>
+        <input type="number" id="nk-total" step="1" placeholder="예: 90">
+      </div>
+    </div>
+    <button class="calc-btn" id="nk-calc-btn">계산하기</button>
+
+    <div class="result" id="nk-result">
+      <div class="headline" id="nk-headline"></div>
+      <div class="steps" id="nk-steps"></div>
+      <ul class="groups" id="nk-groups"></ul>
+      <div class="check" id="nk-check"></div>
+    </div>
+  </section>
+
+  <!-- ===================== 뒤판 진동(암홀) 곡선 ===================== -->
+  <section id="armhole-section">
+    <h2>⑧ 뒤판 진동(암홀) 곡선 계산기</h2>
+    <p class="desc">목표 콧수에 맞는 계단식 단평 패턴을 자동 생성합니다. 기본 규칙: 1~n 값을 각 3회씩 사용(기본합=3×(1+2+…+n)), 목표가 더 크면 1→2→3→…을 순환하며 하나씩 추가합니다.</p>
+
+    <img src="img/앞뒷장.png" alt="앞판/뒤판 도면" class="ref-img">
+
+    <div class="row">
+      <div class="field">
+        <label>목표 콧수 (진동 곡선 한쪽)</label>
+        <input type="number" id="ah-total" step="1" placeholder="예: 19">
+      </div>
+      <div class="field">
+        <label>전체 진동 단수 (선택, 단평 배분용)</label>
+        <input type="number" id="ah-rows" step="1" placeholder="예: 40">
+      </div>
+    </div>
+    <button class="calc-btn" id="ah-calc-btn">계산하기</button>
+
+    <div class="result" id="ah-result">
+      <div class="headline" id="ah-headline"></div>
+      <div class="steps" id="ah-steps"></div>
+      <ul class="groups" id="ah-groups"></ul>
+      <div class="check" id="ah-check"></div>
+    </div>
+  </section>
+
+  <p class="foot-note">NOTUBIS · 수편기 패턴 계산기 · 오프라인에서도 동작하는 단일 HTML 파일</p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- 게이지 ----------
+  var gauge = { stPerCm: 3.4, rwPerCm: 4.2 };
+
+  function readGauge(){
+    var wCm = parseFloat(document.getElementById('g-w-cm').value) || 0;
+    var wSt = parseFloat(document.getElementById('g-w-st').value) || 0;
+    var hCm = parseFloat(document.getElementById('g-h-cm').value) || 0;
+    var hRw = parseFloat(document.getElementById('g-h-rw').value) || 0;
+    gauge.stPerCm = wCm > 0 ? wSt / wCm : 0;
+    gauge.rwPerCm = hCm > 0 ? hRw / hCm : 0;
+    document.getElementById('gauge-readout').textContent =
+      '1cm = ' + gauge.stPerCm.toFixed(2) + '코, ' + gauge.rwPerCm.toFixed(2) + '단  ' +
+      '(스와치 기준 ' + wCm + 'cm=' + wSt + '코 / ' + hCm + 'cm=' + hRw + '단)';
+    updateConversion();
+  }
+  ['g-w-cm','g-w-st','g-h-cm','g-h-rw'].forEach(function(id){
+    document.getElementById(id).addEventListener('input', readGauge);
+  });
+
+  // ---------- cm ↔ 코/단수 환산 ----------
+  function updateConversion(){
+    var wCm = parseFloat(document.getElementById('c-w').value);
+    var hCm = parseFloat(document.getElementById('c-h').value);
+    var mode = document.getElementById('c-even').value;
+    var parts = [];
+    if (!isNaN(wCm)){
+      var raw = wCm * gauge.stPerCm;
+      var val = Math.round(raw);
+      parts.push('가로 ' + wCm + 'cm → <b>' + val + '코</b> (계산값 ' + raw.toFixed(2) + ')');
+    }
+    if (!isNaN(hCm)){
+      var raw2 = hCm * gauge.rwPerCm;
+      var val2 = Math.round(raw2);
+      if (mode === 'even' && val2 % 2 !== 0) val2 += (raw2 - Math.floor(raw2) >= 0.5) ? 1 : -1;
+      parts.push('세로 ' + hCm + 'cm → <b>' + val2 + '단</b> (계산값 ' + raw2.toFixed(2) + (mode==='even' ? ', 짝수 보정' : '') + ')');
+    }
+    document.getElementById('conv-out').innerHTML = parts.length ? parts.join('<br>') : '코수 / 단수 결과가 여기에 표시됩니다.';
+  }
+  ['c-w','c-h','c-even'].forEach(function(id){
+    document.getElementById(id).addEventListener('input', updateConversion);
+    document.getElementById(id).addEventListener('change', updateConversion);
+  });
+
+  // ---------- 세그먼트 버튼 공통 ----------
+  function setupSeg(segId, onChange){
+    var seg = document.getElementById(segId);
+    var state = { value: seg.querySelector('button.active').dataset.v };
+    seg.querySelectorAll('button').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        seg.querySelectorAll('button').forEach(function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+        state.value = btn.dataset.v;
+        onChange(state.value);
+      });
+    });
+    return state;
+  }
+
+  var scenarioState = setupSeg('scenario-seg', function(v){
+    document.getElementById('diag-row').style.display = (v === 'diagonal') ? 'flex' : 'none';
+    document.getElementById('order-row').style.display = (v === 'diagonal') ? 'none' : 'flex';
+    document.getElementById('r-label').textContent = (v === 'diagonal') ? '단수 (R) — 전체 적용 구간' : '단수 (R)';
+  });
+  var nModeState = setupSeg('n-mode-seg', function(v){
+    document.getElementById('n-label').textContent = (v === 'cm') ? '가로 변화량 (cm)' : '코수 (N)';
+    document.getElementById('n-val').placeholder = (v === 'cm') ? '예: 2' : '예: 7';
+  });
+  var rModeState = setupSeg('r-mode-seg', function(v){
+    var lbl = document.getElementById('r-label');
+    lbl.textContent = (v === 'cm') ? '세로 길이 (cm)' : (scenarioState.value === 'diagonal' ? '단수 (R) — 전체 적용 구간' : '단수 (R)');
+    document.getElementById('r-val').placeholder = (v === 'cm') ? '예: 12' : '예: 50';
+  });
+  var orderState = setupSeg('order-seg', function(){});
+
+  function resolveN(){
+    var raw = parseFloat(document.getElementById('n-val').value);
+    if (isNaN(raw)) return null;
+    if (nModeState.value === 'cm') return Math.round(raw * gauge.stPerCm);
+    return Math.round(raw);
+  }
+  function resolveR(){
+    var raw = parseFloat(document.getElementById('r-val').value);
+    if (isNaN(raw)) return null;
+    if (rModeState.value === 'cm') return Math.round(raw * gauge.rwPerCm);
+    return Math.round(raw);
+  }
+
+  // ---------- 분해 계산 ----------
+  function distribute(N, R, mode){
+    // mode: 'flat-flat' | 'flat-action'
+    var I = (mode === 'flat-flat') ? N + 1 : N;
+    if (I <= 0) return null;
+    var q = Math.floor(R / I);
+    var r = R % I;
+
+    var wideCount = r;                // interval q+1
+    var baseCount = I - r;            // interval q
+    var tail = null;
+
+    if (mode === 'flat-flat'){
+      // 기준(q) 그룹에서 하나를 떼어 마지막 평단(tail)으로 사용한다 (+1로 나누고 -1로 횟수를 센다)
+      if (baseCount > 0){
+        baseCount -= 1;
+        tail = q;
+      } else if (wideCount > 0){
+        wideCount -= 1;
+        tail = q + 1;
+      }
+    }
+
+    var groups = [];
+    if (wideCount > 0) groups.push({ interval: q + 1, count: wideCount });
+    if (baseCount > 0) groups.push({ interval: q, count: baseCount });
+
+    return { I: I, q: q, r: r, groups: groups, tail: tail };
+  }
+
+  function orderGroups(groups, order){
+    var arr = groups.slice();
+    if (order === 'straight'){
+      arr.sort(function(a,b){ return a.count - b.count; }); // 횟수 적은 것 먼저
+    } else {
+      arr.sort(function(a,b){ return b.interval - a.interval; }); // 간격 넓은 것 먼저
+    }
+    return arr;
+  }
+
+  function renderGroups(listEl, groups, tail, actionLabel){
+    listEl.innerHTML = '';
+    groups.forEach(function(g, idx){
+      var li = document.createElement('li');
+      li.innerHTML = '<span>' + (idx+1) + '. ' + g.interval + '단마다 1코씩 ' + actionLabel + '</span><span>' + g.count + '회</span>';
+      listEl.appendChild(li);
+    });
+    if (tail){
+      var li2 = document.createElement('li');
+      li2.className = 'tail';
+      li2.innerHTML = '<span>마지막 평단(추가 동작 없음)</span><span>' + tail + '단</span>';
+      listEl.appendChild(li2);
+    }
+  }
+
+  document.getElementById('shape-calc-btn').addEventListener('click', function(){
+    var scenario = scenarioState.value;
+    var N = resolveN();
+    var R = resolveR();
+    var resultBox = document.getElementById('shape-result');
+    var headline = document.getElementById('shape-headline');
+    var steps = document.getElementById('shape-steps');
+    var groupsEl = document.getElementById('shape-groups');
+    var checkEl = document.getElementById('shape-check');
+
+    if (N === null || N <= 0 || R === null || R <= 0){
+      resultBox.classList.add('show');
+      headline.textContent = '입력값을 확인해주세요.';
+      headline.style.color = 'var(--warn)';
+      steps.textContent = '';
+      groupsEl.innerHTML = '';
+      checkEl.textContent = '';
+      return;
+    }
+    headline.style.color = 'var(--ok)';
+
+    if (scenario === 'diagonal'){
+      var interval = Math.max(1, Math.round(parseFloat(document.getElementById('diag-interval').value) || 2));
+      var times = Math.max(1, Math.round(R / interval));
+      var q2 = Math.floor(N / times);
+      var r2 = N % times;
+      var groups2 = [];
+      if (r2 > 0) groups2.push({ interval: q2 + 1, count: r2 });
+      if (times - r2 > 0) groups2.push({ interval: q2, count: times - r2 });
+      // 지늘아뜨기는 코수 기준 그룹이므로 큰 것부터 배열 (예: 6,6,6,6,5,5)
+      groups2.sort(function(a,b){ return b.interval - a.interval; });
+
+      headline.textContent = '완전사선(지늘아뜨기) 결과';
+      steps.textContent =
+        '코수(N) = ' + N + '\n' +
+        '단수(R) = ' + R + ', 기법 간격 = ' + interval + '단\n' +
+        '늘림/줄임 횟수 = R ÷ 간격 = ' + R + ' ÷ ' + interval + ' ≈ ' + times + '회\n' +
+        '코수를 횟수로 분배: ' + N + ' ÷ ' + times + ' = ' + q2 + ' 나머지 ' + r2;
+
+      var listHtml = '';
+      groups2.forEach(function(g, idx){
+        var li = document.createElement('li');
+        li.innerHTML = '<span>' + (idx+1) + '. 회당 ' + g.interval + '코씩</span><span>' + g.count + '회</span>';
+        groupsEl.appendChild(li);
+      });
+      groupsEl.innerHTML = '';
+      groups2.forEach(function(g, idx){
+        var li = document.createElement('li');
+        li.innerHTML = '<span>' + (idx+1) + '. 회당 ' + g.interval + '코씩</span><span>' + g.count + '회</span>';
+        groupsEl.appendChild(li);
+      });
+
+      var totalSt = groups2.reduce(function(s,g){ return s + g.interval * g.count; }, 0);
+      checkEl.textContent = '검산: 코수 합계 ' + totalSt + ' / 목표 ' + N + (totalSt === N ? ' ✓ 일치' : ' ✗ 불일치');
+      checkEl.className = 'check' + (totalSt === N ? '' : ' bad');
+      resultBox.classList.add('show');
+      return;
+    }
+
+    var mode = scenario; // 'flat-flat' | 'flat-action'
+    var d = distribute(N, R, mode);
+    if (!d){
+      headline.textContent = '코수(N)가 0보다 커야 합니다.';
+      headline.style.color = 'var(--warn)';
+      resultBox.classList.add('show');
+      return;
+    }
+    var ordered = orderGroups(d.groups, orderState.value);
+
+    headline.textContent = (mode === 'flat-flat' ? '평평→평평' : '평평→늘림지점') +
+      ' · ' + (orderState.value === 'straight' ? '직선분해' : '곡선분해') + ' 결과';
+
+    var intervalLabel = mode === 'flat-flat' ? 'N + 1 (양끝 평단이므로 간격수 = 코수+1)' : 'N (끝이 늘림지점이므로 간격수 = 코수)';
+    steps.textContent =
+      '코수(N) = ' + N + ', 단수(R) = ' + R + '\n' +
+      '간격수(I) = ' + intervalLabel + ' = ' + d.I + '\n' +
+      'R ÷ I = ' + R + ' ÷ ' + d.I + ' = ' + d.q + ' 나머지 ' + d.r +
+      (mode === 'flat-flat' ? '\n(마지막 평단을 만들기 위해 기준 그룹에서 1회를 떼어 tail로 사용)' : '');
+
+    renderGroups(groupsEl, ordered, d.tail, mode === 'flat-flat' ? '늘림/줄임' : '늘림/줄임');
+
+    var totalActions = ordered.reduce(function(s,g){ return s + g.count; }, 0);
+    var totalRows = ordered.reduce(function(s,g){ return s + g.interval * g.count; }, 0) + (d.tail || 0);
+    var okActions = totalActions === N;
+    var okRows = totalRows === R;
+    checkEl.className = 'check' + ((okActions && okRows) ? '' : ' bad');
+    checkEl.textContent = '검산: 동작 횟수 합계 ' + totalActions + '/' + N + (okActions?' ✓':' ✗') +
+      '  ·  단수 합계 ' + totalRows + '/' + R + (okRows?' ✓':' ✗');
+
+    resultBox.classList.add('show');
+  });
+
+  // ---------- 어깨경사줄임(되돌아뜨기) ----------
+  document.getElementById('sh-calc-btn').addEventListener('click', function(){
+    var total = Math.round(parseFloat(document.getElementById('sh-total').value));
+    var resultBox = document.getElementById('sh-result');
+    var headline = document.getElementById('sh-headline');
+    var steps = document.getElementById('sh-steps');
+    var groupsEl = document.getElementById('sh-groups');
+    var checkEl = document.getElementById('sh-check');
+
+    if (isNaN(total) || total <= 0){
+      resultBox.classList.add('show');
+      headline.textContent = '어깨 전체 줄임코수를 입력해주세요.';
+      headline.style.color = 'var(--warn)';
+      steps.textContent = ''; groupsEl.innerHTML = ''; checkEl.textContent = '';
+      return;
+    }
+    headline.style.color = 'var(--ok)';
+
+    var bindOff = Math.floor(total * (1/3));
+    var rem1 = total - bindOff;
+    var tier1 = Math.floor(rem1 * (1/2));
+    var rem2 = rem1 - tier1;
+    var tier2 = Math.floor(rem2 * (2/3));
+    var tier3 = rem2 - tier2;
+
+    headline.textContent = '정중줄임(되돌아뜨기) 결과';
+    steps.textContent =
+      '전체 줄임코 = ' + total + '\n' +
+      '막음코 = 전체 × 1/3 = ' + bindOff + ' (버림)\n' +
+      '나머지1 = ' + total + ' - ' + bindOff + ' = ' + rem1 + '\n' +
+      '1단마다 그룹 = 나머지1 × 1/2 = ' + tier1 + ' (버림)\n' +
+      '나머지2 = ' + rem1 + ' - ' + tier1 + ' = ' + rem2 + '\n' +
+      '2단마다 그룹 = 나머지2 × 2/3 = ' + tier2 + ' (버림)\n' +
+      '3단마다 그룹 = 나머지2 - ' + tier2 + ' = ' + tier3;
+
+    groupsEl.innerHTML = '';
+    var rows = [
+      { label: '막음코 (한번에 막음)', value: bindOff, tag: bindOff + '코' },
+      { label: '1단마다 1코씩 되돌아뜨기', value: tier1, tag: tier1 + '회' },
+      { label: '2단마다 1코씩 되돌아뜨기', value: tier2, tag: tier2 + '회' },
+      { label: '3단마다 1코씩 되돌아뜨기', value: tier3, tag: tier3 + '회' }
+    ];
+    rows.forEach(function(r){
+      if (r.value <= 0) return;
+      var li = document.createElement('li');
+      li.innerHTML = '<span>' + r.label + '</span><span>' + r.tag + '</span>';
+      groupsEl.appendChild(li);
+    });
+
+    var sum = bindOff + tier1 + tier2 + tier3;
+    checkEl.className = 'check' + (sum === total ? '' : ' bad');
+    checkEl.textContent = '검산: 합계 ' + sum + ' / 목표 ' + total + (sum === total ? ' ✓ 일치' : ' ✗ 불일치');
+    resultBox.classList.add('show');
+  });
+
+  // ---------- 되돌아뜨기 균등분배 (책 기준: distribute()를 콧수/횟수에 재사용) ----------
+  document.getElementById('sb-calc-btn').addEventListener('click', function(){
+    var stitches = Math.round(parseFloat(document.getElementById('sb-stitches').value));
+    var rows = Math.round(parseFloat(document.getElementById('sb-rows').value));
+    var interval = Math.round(parseFloat(document.getElementById('sb-interval').value)) || 2;
+    var resultBox = document.getElementById('sb-result');
+    var headline = document.getElementById('sb-headline');
+    var steps = document.getElementById('sb-steps');
+    var groupsEl = document.getElementById('sb-groups');
+    var checkEl = document.getElementById('sb-check');
+
+    if (isNaN(stitches) || stitches <= 0 || isNaN(rows) || rows <= 0 || interval <= 0){
+      resultBox.classList.add('show');
+      headline.textContent = '어깨너비 콧수·어깨경사 단수·간격을 입력해주세요.';
+      headline.style.color = 'var(--warn)';
+      steps.textContent = ''; groupsEl.innerHTML = ''; checkEl.textContent = '';
+      return;
+    }
+
+    var turns = Math.floor(rows / interval);
+    if (turns <= 0){
+      resultBox.classList.add('show');
+      headline.textContent = '어깨경사 단수가 간격보다 커야 합니다.';
+      headline.style.color = 'var(--warn)';
+      steps.textContent = ''; groupsEl.innerHTML = ''; checkEl.textContent = '';
+      return;
+    }
+    headline.style.color = 'var(--ok)';
+
+    var d = distribute(turns, stitches, 'flat-flat');
+    var ordered = d.groups.slice().sort(function(a,b){ return a.interval - b.interval; }); // 콧수 적은 것부터 어깨 끝쪽
+
+    headline.textContent = '되돌아뜨기 균등분배 결과';
+    steps.textContent =
+      '어깨경사 단수 ÷ 간격 = 되돌아뜨기 횟수: ' + rows + ' ÷ ' + interval + ' = ' + turns + '회\n' +
+      '어깨콧수 ÷ (횟수+1) = ' + stitches + ' ÷ ' + (turns+1) + ' = ' + d.q + ' 나머지 ' + d.r + '\n' +
+      '(평단분을 만들기 위해 기준 그룹에서 1회를 떼어 막음코로 사용)';
+
+    groupsEl.innerHTML = '';
+    ordered.forEach(function(g, idx){
+      var li = document.createElement('li');
+      li.innerHTML = '<span>' + (idx+1) + '. 매 ' + interval + '단마다 ' + g.interval + '코씩 되돌아뜨기</span><span>' + g.count + '회</span>';
+      groupsEl.appendChild(li);
+    });
+    if (d.tail){
+      var liTail = document.createElement('li');
+      liTail.className = 'tail';
+      liTail.innerHTML = '<span>평단분(막음코)</span><span>' + d.tail + '코</span>';
+      groupsEl.appendChild(liTail);
+    }
+
+    var totalTurns = ordered.reduce(function(s,g){ return s + g.count; }, 0);
+    var totalSt = ordered.reduce(function(s,g){ return s + g.interval * g.count; }, 0) + (d.tail || 0);
+    var ok = totalTurns === turns && totalSt === stitches;
+    checkEl.className = 'check' + (ok ? '' : ' bad');
+    checkEl.textContent = '검산: 되돌아뜨기 ' + totalTurns + '/' + turns + '회 · 콧수 합계 ' + totalSt + '/' + stitches + (ok ? ' ✓ 일치' : ' ✗ 불일치');
+    resultBox.classList.add('show');
+  });
+
+  // ---------- 목둘레 카브산줄임 (삼각수 계단) ----------
+  function triangularStaircase(N){
+    // 가장 큰 k: k(k+1)/2 <= N, 남는 코는 첫 단계(가장 큰 그룹)에 더한다
+    var k = 0;
+    while ((k+1)*(k+2)/2 <= N) k++;
+    var used = k*(k+1)/2;
+    var leftover = N - used;
+    var steps = [];
+    for (var i = k; i >= 1; i--){
+      steps.push(i);
+    }
+    if (steps.length === 0){ steps = [N]; leftover = 0; }
+    else { steps[0] += leftover; }
+    return { steps: steps, k: k, leftover: leftover };
+  }
+
+  document.getElementById('nk-calc-btn').addEventListener('click', function(){
+    var total = Math.round(parseFloat(document.getElementById('nk-total').value));
+    var resultBox = document.getElementById('nk-result');
+    var headline = document.getElementById('nk-headline');
+    var steps = document.getElementById('nk-steps');
+    var groupsEl = document.getElementById('nk-groups');
+    var checkEl = document.getElementById('nk-check');
+
+    if (isNaN(total) || total <= 0){
+      resultBox.classList.add('show');
+      headline.textContent = '고대콧수를 입력해주세요.';
+      headline.style.color = 'var(--warn)';
+      steps.textContent = ''; groupsEl.innerHTML = ''; checkEl.textContent = '';
+      return;
+    }
+    headline.style.color = 'var(--ok)';
+
+    var centerBind = Math.floor(total * (1/4));
+    var sideTotal = total - centerBind;
+    var curveSt = Math.floor(sideTotal / 2);
+    var stair = triangularStaircase(curveSt);
+
+    headline.textContent = '목둘레 카브산줄임 결과 (한쪽 기준)';
+    steps.textContent =
+      '고대콧수 = ' + total + '\n' +
+      '중심막음코 = 고대콧수 × 1/4 = ' + centerBind + ' (버림)\n' +
+      '카브산줄임코(양쪽 합) = 고대콧수 - 중심막음코 = ' + sideTotal + '\n' +
+      '카브산줄임코(한쪽) = ' + sideTotal + ' ÷ 2 = ' + curveSt + ' (버림)\n' +
+      '삼각수 계단: ' + stair.k + '까지 사용 (1+...+' + stair.k + ' = ' + (stair.k*(stair.k+1)/2) + ')' +
+      (stair.leftover > 0 ? ', 남는 ' + stair.leftover + '코는 첫 단계에 합산' : '');
+
+    groupsEl.innerHTML = '';
+    stair.steps.forEach(function(s, idx){
+      var li = document.createElement('li');
+      li.innerHTML = '<span>' + (idx+1) + '단계: 매단 되돌아뜨기</span><span>' + s + '코</span>';
+      groupsEl.appendChild(li);
+    });
+
+    var sum = stair.steps.reduce(function(a,b){ return a+b; }, 0);
+    checkEl.className = 'check' + (sum === curveSt ? '' : ' bad');
+    checkEl.textContent = '검산: 계단 합계 ' + sum + ' / 목표 ' + curveSt + (sum === curveSt ? ' ✓ 일치' : ' ✗ 불일치') +
+      '  (반대쪽도 동일하게 적용)';
+    resultBox.classList.add('show');
+  });
+
+  // ---------- 뒤판 진동(암홀) 곡선 ----------
+  function generateArmholeSteps(target){
+    var n = 1;
+    while (3*(n+1)*(n+2)/2 <= target) n++;
+    var base = 3*n*(n+1)/2;
+    var extra = target - base;
+    var counts = {};
+    for (var v=1; v<=n; v++) counts[v] = 3;
+    var cycle = 0;
+    var leftover = 0;
+    while (extra > 0){
+      var vv = (cycle % n) + 1;
+      if (vv <= extra){
+        counts[vv] += 1;
+        extra -= vv;
+      } else {
+        leftover = extra;
+        extra = 0;
+        break;
+      }
+      cycle++;
+    }
+    var stepsArr = [];
+    for (var v2 = n; v2 >= 1; v2--){
+      for (var i = 0; i < counts[v2]; i++) stepsArr.push(v2);
+    }
+    var achieved = stepsArr.reduce(function(a,b){ return a+b; }, 0);
+    return { n: n, base: base, counts: counts, steps: stepsArr, achieved: achieved, leftover: leftover };
+  }
+
+  document.getElementById('ah-calc-btn').addEventListener('click', function(){
+    var target = Math.round(parseFloat(document.getElementById('ah-total').value));
+    var rowsTotal = parseFloat(document.getElementById('ah-rows').value);
+    var resultBox = document.getElementById('ah-result');
+    var headline = document.getElementById('ah-headline');
+    var steps = document.getElementById('ah-steps');
+    var groupsEl = document.getElementById('ah-groups');
+    var checkEl = document.getElementById('ah-check');
+
+    if (isNaN(target) || target <= 0){
+      resultBox.classList.add('show');
+      headline.textContent = '목표 콧수를 입력해주세요.';
+      headline.style.color = 'var(--warn)';
+      steps.textContent = ''; groupsEl.innerHTML = ''; checkEl.textContent = '';
+      return;
+    }
+    headline.style.color = 'var(--ok)';
+
+    var res = generateArmholeSteps(target);
+    headline.textContent = '진동 곡선 계단 결과';
+    steps.textContent =
+      '목표 콧수 = ' + target + '\n' +
+      '사용 단계값 범위 = 1~' + res.n + ' (기본 3회씩, 기본합 = ' + res.base + ')' +
+      (target > res.base ? '\n추가분 = ' + (target - res.base) + ' → 1→2→3…순으로 순환 추가' : '') +
+      (res.leftover > 0 ? '\n⚠ 정확히 나누어떨어지지 않아 ' + res.leftover + '코가 남습니다 (목표를 인접값으로 조정 권장)' : '');
+
+    groupsEl.innerHTML = '';
+    var li0 = document.createElement('li');
+    li0.innerHTML = '<span>단계 시퀀스 (스텝 수 ' + res.steps.length + ')</span><span>' + res.steps.join(', ') + '</span>';
+    groupsEl.appendChild(li0);
+
+    if (!isNaN(rowsTotal) && rowsTotal > 0){
+      var gaps = res.steps.length - 1;
+      if (gaps > 0){
+        var q = Math.floor(rowsTotal / gaps);
+        var r = rowsTotal % gaps;
+        var li1 = document.createElement('li');
+        li1.innerHTML = '<span>단계 사이 평단 (추정 · 확인 필요)</span><span>' +
+          (r > 0 ? r + '군데는 ' + (q+1) + '단, ' + (gaps-r) + '군데는 ' + q + '단' : q + '단 × ' + gaps + '군데') +
+          '</span>';
+        groupsEl.appendChild(li1);
+      }
+    }
+
+    var ok = res.achieved === target;
+    checkEl.className = 'check' + (ok ? '' : ' bad');
+    checkEl.textContent = '검산: 시퀀스 합계 ' + res.achieved + ' / 목표 ' + target +
+      (ok ? ' ✓ 일치' : ' ✗ 근사치 (남는 ' + res.leftover + '코, 목표값 조정 권장)');
+    resultBox.classList.add('show');
+  });
+
+  // ---------- 탭 전환 (앞장/뒷장/소매) ----------
+  document.querySelectorAll('#panel-tabbar .tab-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('#panel-tabbar .tab-btn').forEach(function(b){ b.classList.remove('active'); });
+      document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ---------- 다단 곡선분해 워크시트 (재사용 가능한 팩토리) ----------
+  function createTierWorksheet(prefix){
+    var tiers = [
+      { interval: null, count: null },
+      { interval: null, count: null },
+      { interval: null, count: null }
+    ];
+    var target = null;
+
+    function render(){
+      var wrap = document.getElementById(prefix + '-tier-rows');
+      wrap.innerHTML = '';
+      tiers.forEach(function(t, idx){
+        var row = document.createElement('div');
+        row.className = 'tier-row';
+        row.innerHTML =
+          '<span class="tr-label">' + (idx+1) + '.</span>' +
+          '<input type="number" placeholder="간격(단)" data-idx="' + idx + '" data-field="interval" value="' + (t.interval==null?'':t.interval) + '">' +
+          '<span style="font-size:0.8rem;color:var(--sub);white-space:nowrap;">단마다 1코씩</span>' +
+          '<input type="number" placeholder="횟수" data-idx="' + idx + '" data-field="count" value="' + (t.count==null?'':t.count) + '">' +
+          '<span style="font-size:0.8rem;color:var(--sub);white-space:nowrap;">회</span>' +
+          '<button type="button" class="tr-remove" data-remove="' + idx + '">삭제</button>';
+        wrap.appendChild(row);
+      });
+      wrap.querySelectorAll('input').forEach(function(inp){
+        inp.addEventListener('input', function(){
+          var idx = parseInt(inp.dataset.idx, 10);
+          var field = inp.dataset.field;
+          var v = parseFloat(inp.value);
+          tiers[idx][field] = isNaN(v) ? null : Math.round(v);
+          updateCheck();
+        });
+      });
+      wrap.querySelectorAll('button[data-remove]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          var idx = parseInt(btn.dataset.remove, 10);
+          tiers.splice(idx, 1);
+          render();
+          updateCheck();
+        });
+      });
+    }
+
+    function updateCheck(){
+      var checkEl = document.getElementById(prefix + '-tier-check');
+      var resultEl = document.getElementById(prefix + '-tier-result');
+      var valid = tiers.filter(function(t){ return t.interval > 0 && t.count > 0; });
+      var totalCount = valid.reduce(function(s,t){ return s + t.count; }, 0);
+      var totalRows = valid.reduce(function(s,t){ return s + t.interval * t.count; }, 0);
+
+      if (target == null){
+        checkEl.textContent = '';
+        resultEl.innerHTML = '';
+        return;
+      }
+      var ok = totalCount === target;
+      checkEl.className = 'check' + (ok ? '' : ' bad');
+      checkEl.textContent = '코수 합계 ' + totalCount + ' / 목표 ' + target + (ok ? ' ✓ 일치' : ' ✗ 불일치') +
+        '  ·  총 단수 ' + totalRows + '단';
+
+      var ordered = valid.slice().sort(function(a,b){ return a.count - b.count; }); // 직선분해: 횟수 작은 것부터
+      resultEl.innerHTML = '';
+      ordered.forEach(function(t, idx){
+        var li = document.createElement('li');
+        li.innerHTML = '<span>' + (idx+1) + '. ' + t.interval + '단마다 1코씩</span><span>' + t.count + '회</span>';
+        resultEl.appendChild(li);
+      });
+    }
+
+    document.getElementById(prefix + '-tier-add').addEventListener('click', function(){
+      tiers.push({ interval: null, count: null });
+      render();
+      updateCheck();
+    });
+
+    render();
+
+    return {
+      setTarget: function(v){
+        target = v;
+        var targetEl = document.getElementById(prefix + '-tier-target');
+        targetEl.textContent = (v == null)
+          ? '공통 입력을 먼저 계산해주세요.'
+          : '목표: 한쪽 ' + v + '코 줄임 (직선분해 규칙: 횟수 작은 것부터)';
+        updateCheck();
+      }
+    };
+  }
+
+  var fpWorksheet = createTierWorksheet('fp');
+  var bpWorksheet = createTierWorksheet('bp');
+  var slWorksheet = createTierWorksheet('sl');
+
+  // ---------- 앞장·뒷장 공통 입력 ----------
+  document.getElementById('pc-calc-btn').addEventListener('click', function(){
+    var topCm = parseFloat(document.getElementById('pc-top').value);
+    var bottomCm = parseFloat(document.getElementById('pc-bottom').value);
+    var neckCm = parseFloat(document.getElementById('pc-neck').value);
+    var resultBox = document.getElementById('pc-result');
+    var headline = document.getElementById('pc-headline');
+    var steps = document.getElementById('pc-steps');
+    var groupsEl = document.getElementById('pc-groups');
+
+    if (isNaN(topCm) || isNaN(bottomCm) || isNaN(neckCm) || topCm<=0 || bottomCm<=0 || neckCm<=0){
+      resultBox.classList.add('show');
+      headline.textContent = '상단·하단·목너비를 모두 입력해주세요.';
+      headline.style.color = 'var(--warn)';
+      steps.textContent = ''; groupsEl.innerHTML = '';
+      fpWorksheet.setTarget(null);
+      bpWorksheet.setTarget(null);
+      return;
+    }
+
+    var topSt = Math.round(topCm * gauge.stPerCm);
+    var bottomSt = Math.round(bottomCm * gauge.stPerCm);
+    var neckSt = Math.round(neckCm * gauge.stPerCm);
+    var shoulderSt = Math.floor((topSt - neckSt) / 2);
+    var diffSt = bottomSt - topSt;
+    var perSideDiff = Math.round(diffSt / 2);
+
+    headline.textContent = '공통 계산 결과';
+    headline.style.color = 'var(--ok)';
+    steps.textContent =
+      '상단(어깨~어깨) = ' + topCm + 'cm → ' + topSt + '코\n' +
+      '하단(가슴폭) = ' + bottomCm + 'cm → ' + bottomSt + '코\n' +
+      '목너비 = ' + neckCm + 'cm → ' + neckSt + '코\n' +
+      '어깨너비(한쪽) = (상단콧수 - 목콧수) ÷ 2 = (' + topSt + ' - ' + neckSt + ') ÷ 2 = ' + shoulderSt + '코\n' +
+      '상단-하단 차이 = ' + bottomSt + ' - ' + topSt + ' = ' + diffSt + '코 (양쪽 암홀 합)\n' +
+      '한쪽 암홀 줄임 목표 = ' + diffSt + ' ÷ 2 = ' + perSideDiff + '코';
+
+    groupsEl.innerHTML = '';
+    [
+      ['상단 콧수', topSt + '코'],
+      ['하단 콧수', bottomSt + '코'],
+      ['목 콧수', neckSt + '코'],
+      ['어깨너비(한쪽)', shoulderSt + '코'],
+      ['암홀 줄임(한쪽 목표)', perSideDiff + '코']
+    ].forEach(function(r){
+      var li = document.createElement('li');
+      li.innerHTML = '<span>' + r[0] + '</span><span>' + r[1] + '</span>';
+      groupsEl.appendChild(li);
+    });
+
+    resultBox.classList.add('show');
+
+    var target = (diffSt <= 0) ? null : perSideDiff;
+    fpWorksheet.setTarget(target);
+    bpWorksheet.setTarget(target);
+
+    var topLabel = topCm + 'cm(' + topSt + '코) · 목' + neckCm + 'cm(' + neckSt + '코)';
+    var bottomLabel = bottomCm + 'cm(' + bottomSt + '코)';
+    document.getElementById('dg-fp-top').textContent = topLabel;
+    document.getElementById('dg-fp-bottom').textContent = bottomLabel;
+    document.getElementById('dg-bp-top').textContent = topLabel;
+    document.getElementById('dg-bp-bottom').textContent = bottomLabel;
+  });
+
+  // ---------- 뒷장: 목깊이 → 목둘레 곡선(카브산줄임 방식 재사용) ----------
+  document.getElementById('bp-calc-btn').addEventListener('click', function(){
+    var depthCm = parseFloat(document.getElementById('bp-depth').value);
+    var resultBox = document.getElementById('bp-result');
+    var headline = document.getElementById('bp-headline');
+    var steps = document.getElementById('bp-steps');
+    var groupsEl = document.getElementById('bp-groups');
+    var checkEl = document.getElementById('bp-check');
+
+    if (isNaN(depthCm) || depthCm <= 0){
+      resultBox.classList.add('show');
+      headline.textContent = '목깊이를 입력해주세요.';
+      headline.style.color = 'var(--warn)';
+      steps.textContent = ''; groupsEl.innerHTML = ''; checkEl.textContent = '';
+      return;
+    }
+    headline.style.color = 'var(--ok)';
+
+    var depthSt = Math.round(depthCm * gauge.stPerCm);
+    var stair = triangularStaircase(depthSt);
+
+    headline.textContent = '뒷장 목둘레 곡선 결과';
+    steps.textContent =
+      '목깊이 = ' + depthCm + 'cm → ' + depthSt + '코 (게이지로 콧수 환산)\n' +
+      '삼각수 계단: ' + stair.k + '까지 사용 (1+...+' + stair.k + ' = ' + (stair.k*(stair.k+1)/2) + ')' +
+      (stair.leftover > 0 ? ', 남는 ' + stair.leftover + '코는 첫 단계에 합산' : '');
+
+    groupsEl.innerHTML = '';
+    stair.steps.forEach(function(s, idx){
+      var li = document.createElement('li');
+      li.innerHTML = '<span>' + (idx+1) + '단계: 매단 되돌아뜨기</span><span>' + s + '코</span>';
+      groupsEl.appendChild(li);
+    });
+
+    var sum = stair.steps.reduce(function(a,b){ return a+b; }, 0);
+    checkEl.className = 'check' + (sum === depthSt ? '' : ' bad');
+    checkEl.textContent = '검산: 계단 합계 ' + sum + ' / 목표 ' + depthSt + (sum === depthSt ? ' ✓ 일치' : ' ✗ 불일치');
+    resultBox.classList.add('show');
+
+    document.getElementById('dg-bp-depth').textContent = '목깊이 ' + depthCm + 'cm(' + depthSt + '코)';
+  });
+
+  // ---------- 소매 ----------
+  document.getElementById('sl-calc-btn').addEventListener('click', function(){
+    var lenCm = parseFloat(document.getElementById('sl-length').value);
+    var topCm = parseFloat(document.getElementById('sl-top').value);
+    var bottomCm = parseFloat(document.getElementById('sl-bottom').value);
+    var resultBox = document.getElementById('sl-result');
+    var headline = document.getElementById('sl-headline');
+    var steps = document.getElementById('sl-steps');
+    var groupsEl = document.getElementById('sl-groups');
+    var taperBlock = document.getElementById('sl-taper-block');
+
+    if (isNaN(lenCm) || isNaN(topCm) || isNaN(bottomCm) || lenCm<=0 || topCm<=0 || bottomCm<=0){
+      resultBox.classList.add('show');
+      headline.textContent = '소매기장·소매산 폭·커프 폭을 모두 입력해주세요.';
+      headline.style.color = 'var(--warn)';
+      steps.textContent = ''; groupsEl.innerHTML = '';
+      taperBlock.style.display = 'none';
+      slWorksheet.setTarget(null);
+      return;
+    }
+
+    var lenRows = Math.round(lenCm * gauge.rwPerCm);
+    var topSt = Math.round(topCm * gauge.stPerCm);
+    var bottomSt = Math.round(bottomCm * gauge.stPerCm);
+    var diffSt = topSt - bottomSt;
+    var perSideDiff = Math.round(diffSt / 2);
+    var elbowCm = lenCm * (3/5);
+    var elbowRows = Math.round(elbowCm * gauge.rwPerCm);
+
+    headline.textContent = '소매 계산 결과';
+    headline.style.color = 'var(--ok)';
+    steps.textContent =
+      '소매기장 = ' + lenCm + 'cm → ' + lenRows + '단\n' +
+      '소매산 폭 = ' + topCm + 'cm → ' + topSt + '코\n' +
+      '커프 폭 = ' + bottomCm + 'cm → ' + bottomSt + '코\n' +
+      '소매산-커프 차이 = ' + topSt + ' - ' + bottomSt + ' = ' + diffSt + '코 (양쪽 늘림 합)\n' +
+      '한쪽 늘림 목표 = ' + diffSt + ' ÷ 2 = ' + perSideDiff + '코\n' +
+      '팔꿈치 길이 = 소매기장 × 3/5 = ' + lenCm + ' × 0.6 = ' + elbowCm.toFixed(1) + 'cm → ' + elbowRows + '단 (커프에서부터)';
+
+    groupsEl.innerHTML = '';
+    [
+      ['소매기장 단수', lenRows + '단'],
+      ['소매산 콧수', topSt + '코'],
+      ['커프 콧수', bottomSt + '코'],
+      ['한쪽 늘림 목표', perSideDiff + '코'],
+      ['팔꿈치 위치(커프부터)', elbowCm.toFixed(1) + 'cm (' + elbowRows + '단)']
+    ].forEach(function(r){
+      var li = document.createElement('li');
+      li.innerHTML = '<span>' + r[0] + '</span><span>' + r[1] + '</span>';
+      groupsEl.appendChild(li);
+    });
+
+    resultBox.classList.add('show');
+
+    var target = (diffSt <= 0) ? null : perSideDiff;
+    slWorksheet.setTarget(target);
+    taperBlock.style.display = (target != null) ? 'block' : 'none';
+
+    document.getElementById('dg-sl-top').textContent = topCm + 'cm(' + topSt + '코)';
+    document.getElementById('dg-sl-length').textContent = lenCm + 'cm(' + lenRows + '단)';
+    document.getElementById('dg-sl-bottom').textContent = bottomCm + 'cm(' + bottomSt + '코)';
+  });
+
+  // ---------- STEP 2: 표준 치수 참고표 ----------
+  document.querySelectorAll('#std-size-table tbody tr').forEach(function(tr){
+    tr.addEventListener('click', function(){
+      document.getElementById('fit-chest').value = tr.dataset.chest;
+      document.getElementById('fit-sleeve').value = tr.dataset.sleeve;
+      document.getElementById('fit-length').value = tr.dataset.length;
+    });
+  });
+
+  // ---------- STEP 2: 원하는 치수 정하기 ----------
+  var easeSeg = document.getElementById('ease-seg');
+  easeSeg.querySelectorAll('button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      easeSeg.querySelectorAll('button').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById('fit-ease').value = btn.dataset.v;
+    });
+  });
+
+  var fitFinishedChest = null;
+  var fitSleeveLen = null;
+
+  function drawBodySilhouette(chestCm, finishedCm, lengthCmRaw){
+    var svg = document.getElementById('body-svg');
+    var vbW = 340, vbH = 420;
+    var lengthGiven = !!(lengthCmRaw && lengthCmRaw > 0);
+    var lenCm = lengthGiven ? lengthCmRaw : 55;
+
+    var pxPerCm = (vbW - 60) / finishedCm;
+    var bodyH = lenCm * pxPerCm;
+    var maxDrawH = vbH - 80;
+    if (bodyH > maxDrawH){
+      pxPerCm *= (maxDrawH / bodyH);
+      bodyH = lenCm * pxPerCm;
+    }
+
+    var bodyW = chestCm * pxPerCm;
+    var garmentW = finishedCm * pxPerCm;
+    var cx = vbW / 2;
+    var topY = 46;
+    var underarmY = topY + bodyH * 0.18;
+    var hemY = topY + bodyH;
+
+    function torsoPath(fullW, shoulderRatio, top, underarm, hem, pad){
+      var halfShoulder = (fullW * shoulderRatio) / 2 + pad;
+      var halfChest = fullW / 2 + pad;
+      var l = cx - halfShoulder, r = cx + halfShoulder;
+      var lu = cx - halfChest, ru = cx + halfChest;
+      return 'M ' + l + ' ' + (top - pad) +
+        ' L ' + r + ' ' + (top - pad) +
+        ' L ' + ru + ' ' + underarm +
+        ' L ' + ru + ' ' + (hem + pad) +
+        ' L ' + lu + ' ' + (hem + pad) +
+        ' L ' + lu + ' ' + underarm + ' Z';
+    }
+
+    var bodyPath = torsoPath(bodyW, 0.42, topY, underarmY, hemY, 0);
+    var garmentPath = torsoPath(garmentW, 0.5, topY, underarmY, hemY, 5);
+
+    svg.setAttribute('viewBox', '0 0 ' + vbW + ' ' + vbH);
+    svg.innerHTML =
+      '<path class="sil-body" d="' + bodyPath + '"></path>' +
+      '<path class="sil-garment" d="' + garmentPath + '"></path>' +
+      '<text class="sil-text" x="' + cx + '" y="22" text-anchor="middle">실측 ' + chestCm + 'cm · 완성 ' + finishedCm + 'cm (+' + (finishedCm - chestCm).toFixed(1) + 'cm)</text>' +
+      '<text class="sil-text-sub" x="' + cx + '" y="' + (hemY + 24) + '" text-anchor="middle">기장 ' + lenCm + 'cm' + (lengthGiven ? '' : ' (총장 미입력, 추정치)') + '</text>';
+  }
+
+  document.getElementById('fit-calc-btn').addEventListener('click', function(){
+    var chest = parseFloat(document.getElementById('fit-chest').value);
+    var ease = parseFloat(document.getElementById('fit-ease').value);
+    var sleeve = parseFloat(document.getElementById('fit-sleeve').value);
+    var lengthCm = parseFloat(document.getElementById('fit-length').value);
+    var resultBox = document.getElementById('fit-result');
+    var headline = document.getElementById('fit-headline');
+    var steps = document.getElementById('fit-steps');
+
+    if (isNaN(chest) || chest <= 0){
+      resultBox.classList.add('show');
+      headline.textContent = '실측 가슴둘레를 입력해주세요.';
+      headline.style.color = 'var(--warn)';
+      steps.textContent = '';
+      fitFinishedChest = null;
+      document.getElementById('silhouette-wrap').style.display = 'none';
+      return;
+    }
+    if (isNaN(ease)) ease = 0;
+
+    fitFinishedChest = chest + ease;
+    fitSleeveLen = (!isNaN(sleeve) && sleeve > 0) ? sleeve : null;
+
+    headline.textContent = '완성 치수 결과';
+    headline.style.color = 'var(--ok)';
+    steps.textContent =
+      '완성 가슴둘레 = 실측 ' + chest + 'cm + 여유분 ' + ease + 'cm = ' + fitFinishedChest + 'cm' +
+      (fitSleeveLen != null ? '\n소매길이 = ' + fitSleeveLen + 'cm (그대로 사용)' : '');
+    resultBox.classList.add('show');
+
+    document.getElementById('silhouette-wrap').style.display = 'block';
+    drawBodySilhouette(chest, fitFinishedChest, isNaN(lengthCm) ? null : lengthCm);
+  });
+
+  document.getElementById('fit-apply-bottom').addEventListener('click', function(){
+    if (fitFinishedChest == null) return;
+    document.getElementById('pc-bottom').value = fitFinishedChest;
+    document.getElementById('panel-common').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  document.getElementById('fit-apply-sleeve').addEventListener('click', function(){
+    if (fitSleeveLen == null) return;
+    document.getElementById('sl-length').value = fitSleeveLen;
+    document.querySelector('.tab-btn[data-tab="sleeve"]').click();
+    document.getElementById('panel-tabbar').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  // 초기화
+  readGauge();
+})();
+</script>
+</body>
+</html>
