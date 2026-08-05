@@ -155,6 +155,15 @@
   .std-size-table tbody tr{ cursor:pointer; }
   .std-size-table tbody tr:hover{ background:var(--bg); }
   .std-size-table tbody tr:last-child td{ border-bottom:none; }
+  .schematic-svg{
+    display:block; width:100%; max-width:340px; height:auto; margin:6px auto 0;
+    background:var(--panel); border:1px solid var(--line); border-radius:10px;
+  }
+  .sch-shape{ fill:color-mix(in srgb, var(--accent) 10%, transparent); stroke:var(--accent); stroke-width:2; }
+  .sch-line{ stroke:var(--sub); stroke-width:1; stroke-dasharray:3 3; }
+  .sch-label{ fill:var(--ink); font-size:11px; font-weight:600; }
+  .sch-label-sub{ fill:var(--sub); font-size:10px; }
+  .sch-step{ fill:none; stroke:var(--accent); stroke-width:2; }
 </style>
 </head>
 <body>
@@ -309,6 +318,8 @@
       <div class="headline" id="pc-headline">공통 계산 결과</div>
       <div class="steps" id="pc-steps"></div>
       <ul class="groups" id="pc-groups"></ul>
+      <p class="desc" style="margin:14px 0 6px;">계산된 수치를 실제 축척으로 그린 도식입니다.</p>
+      <svg id="panel-svg" class="schematic-svg" viewBox="0 0 320 300" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
   </section>
 
@@ -350,6 +361,7 @@
       <div class="steps" id="bp-steps"></div>
       <ul class="groups" id="bp-groups"></ul>
       <div class="check" id="bp-check"></div>
+      <svg id="neck-svg" class="schematic-svg" viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
 
     <div class="subblock" id="bp-armhole-block">
@@ -393,6 +405,7 @@
       <div class="headline" id="sl-headline"></div>
       <div class="steps" id="sl-steps"></div>
       <ul class="groups" id="sl-groups"></ul>
+      <svg id="sleeve-svg" class="schematic-svg" viewBox="0 0 260 340" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
 
     <div class="subblock" id="sl-taper-block" style="display:none;">
@@ -1099,6 +1112,78 @@
     resultBox.classList.add('show');
   });
 
+  // ---------- 결과 도식(SVG) ----------
+  function drawPanelSchematic(topCm, bottomCm, neckCm, topSt, bottomSt, neckSt){
+    var svg = document.getElementById('panel-svg');
+    var vbW = 320, vbH = 300;
+    var maxW = Math.max(topCm, bottomCm, 1);
+    var pxPerCm = (vbW - 60) / maxW;
+    var h = 200;
+    var topW = topCm * pxPerCm, bottomW = bottomCm * pxPerCm, neckW = Math.min(neckCm, topCm) * pxPerCm;
+    var cx = vbW / 2, topY = 46, underarmY = topY + h * 0.18, hemY = topY + h;
+    var l = cx - topW / 2, r = cx + topW / 2;
+    var hl = cx - bottomW / 2, hr = cx + bottomW / 2;
+    var nl = cx - neckW / 2, nr = cx + neckW / 2;
+
+    var path = 'M ' + l + ' ' + topY +
+      ' L ' + r + ' ' + topY +
+      ' L ' + hr + ' ' + underarmY +
+      ' L ' + hr + ' ' + hemY +
+      ' L ' + hl + ' ' + hemY +
+      ' L ' + hl + ' ' + underarmY + ' Z';
+
+    svg.setAttribute('viewBox', '0 0 ' + vbW + ' ' + vbH);
+    svg.innerHTML =
+      '<path class="sch-shape" d="' + path + '"></path>' +
+      '<line class="sch-line" x1="' + nl + '" y1="' + (topY - 12) + '" x2="' + nl + '" y2="' + topY + '"></line>' +
+      '<line class="sch-line" x1="' + nr + '" y1="' + (topY - 12) + '" x2="' + nr + '" y2="' + topY + '"></line>' +
+      '<line class="sch-line" x1="' + nl + '" y1="' + (topY - 8) + '" x2="' + nr + '" y2="' + (topY - 8) + '"></line>' +
+      '<text class="sch-label" x="' + cx + '" y="' + (topY - 18) + '" text-anchor="middle">목 ' + neckCm + 'cm(' + neckSt + '코)</text>' +
+      '<text class="sch-label" x="' + cx + '" y="' + (topY + 16) + '" text-anchor="middle">상단 ' + topCm + 'cm(' + topSt + '코)</text>' +
+      '<text class="sch-label" x="' + cx + '" y="' + (hemY + 20) + '" text-anchor="middle">하단 ' + bottomCm + 'cm(' + bottomSt + '코)</text>';
+  }
+
+  function drawNeckSchematic(stepArr, depthCm, depthSt){
+    var svg = document.getElementById('neck-svg');
+    var vbW = 320;
+    var maxSt = Math.max.apply(null, stepArr.concat([1]));
+    var pxPerSt = 220 / maxSt;
+    var rowH = Math.max(10, Math.min(20, 90 / stepArr.length));
+    var x = 20, y = 16;
+    var d = 'M ' + x + ' ' + y;
+    stepArr.forEach(function(s){
+      var w = s * pxPerSt;
+      d += ' h ' + w + ' v ' + rowH;
+      x += w; y += rowH;
+    });
+    var vbH = y + 34;
+    svg.setAttribute('viewBox', '0 0 ' + vbW + ' ' + vbH);
+    svg.innerHTML =
+      '<path class="sch-step" d="' + d + '"></path>' +
+      '<text class="sch-label-sub" x="16" y="' + (vbH - 12) + '">목깊이 ' + depthCm + 'cm(' + depthSt + '코) · 계단: ' + stepArr.join('-') + '</text>';
+  }
+
+  function drawSleeveSchematic(lenCm, topCm, bottomCm, lenRows, topSt, bottomSt){
+    var svg = document.getElementById('sleeve-svg');
+    var vbW = 260, vbH = 340;
+    var pxPerCm = (vbW - 60) / Math.max(topCm, bottomCm, 1);
+    var h = lenCm * pxPerCm;
+    var maxH = vbH - 80;
+    if (h > maxH){ pxPerCm *= (maxH / h); h = lenCm * pxPerCm; }
+    var topW = topCm * pxPerCm, bottomW = bottomCm * pxPerCm;
+    var cx = vbW / 2, topY = 40, hemY = topY + h;
+    var l = cx - topW / 2, r = cx + topW / 2;
+    var hl = cx - bottomW / 2, hr = cx + bottomW / 2;
+    var path = 'M ' + l + ' ' + topY + ' L ' + r + ' ' + topY + ' L ' + hr + ' ' + hemY + ' L ' + hl + ' ' + hemY + ' Z';
+
+    svg.setAttribute('viewBox', '0 0 ' + vbW + ' ' + vbH);
+    svg.innerHTML =
+      '<path class="sch-shape" d="' + path + '"></path>' +
+      '<text class="sch-label" x="' + cx + '" y="' + (topY - 14) + '" text-anchor="middle">소매산 ' + topCm + 'cm(' + topSt + '코)</text>' +
+      '<text class="sch-label" x="' + cx + '" y="' + (hemY + 22) + '" text-anchor="middle">커프 ' + bottomCm + 'cm(' + bottomSt + '코)</text>' +
+      '<text class="sch-label-sub" x="' + (Math.max(r, hr) + 8) + '" y="' + ((topY + hemY) / 2) + '">' + lenCm + 'cm(' + lenRows + '단)</text>';
+  }
+
   // ---------- 탭 전환 (앞장/뒷장/소매) ----------
   document.querySelectorAll('#panel-tabbar .tab-btn').forEach(function(btn){
     btn.addEventListener('click', function(){
@@ -1264,6 +1349,8 @@
     document.getElementById('dg-fp-bottom').textContent = bottomLabel;
     document.getElementById('dg-bp-top').textContent = topLabel;
     document.getElementById('dg-bp-bottom').textContent = bottomLabel;
+
+    drawPanelSchematic(topCm, bottomCm, neckCm, topSt, bottomSt, neckSt);
   });
 
   // ---------- 뒷장: 목깊이 → 목둘레 곡선(카브산줄임 방식 재사용) ----------
@@ -1306,6 +1393,8 @@
     resultBox.classList.add('show');
 
     document.getElementById('dg-bp-depth').textContent = '목깊이 ' + depthCm + 'cm(' + depthSt + '코)';
+
+    drawNeckSchematic(stair.steps, depthCm, depthSt);
   });
 
   // ---------- 소매 ----------
@@ -1369,6 +1458,8 @@
     document.getElementById('dg-sl-top').textContent = topCm + 'cm(' + topSt + '코)';
     document.getElementById('dg-sl-length').textContent = lenCm + 'cm(' + lenRows + '단)';
     document.getElementById('dg-sl-bottom').textContent = bottomCm + 'cm(' + bottomSt + '코)';
+
+    drawSleeveSchematic(lenCm, topCm, bottomCm, lenRows, topSt, bottomSt);
   });
 
   // ---------- STEP 2: 표준 치수 참고표 ----------
