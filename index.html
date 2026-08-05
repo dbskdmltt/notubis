@@ -292,15 +292,6 @@
     <h2>③ 코수·단수 계산 — 앞장·뒷장 공통 입력</h2>
     <p class="desc">앞장과 뒷장은 목깊이를 제외하고 같은 수치를 씁니다. 여기서 한 번만 입력하면 아래 앞장/뒷장 탭에 모두 적용됩니다.</p>
 
-    <div class="diagram-wrap">
-      <img src="img/앞뒷장.png" alt="앞판/뒤판 도면" class="ref-img">
-      <span class="dg-label" id="dg-fp-top" style="left:50%; top:3%;"></span>
-      <span class="dg-label" id="dg-fp-bottom" style="left:50%; top:42%;"></span>
-      <span class="dg-label" id="dg-bp-top" style="left:50%; top:54%;"></span>
-      <span class="dg-label" id="dg-bp-bottom" style="left:50%; top:96%;"></span>
-      <span class="dg-label accent" id="dg-bp-depth" style="left:78%; top:57%;"></span>
-    </div>
-
     <div class="row">
       <div class="field">
         <label>① 상단길이 (cm) — 어깨~어깨 폭</label>
@@ -602,8 +593,6 @@
   <section id="armhole-section">
     <h2>⑧ 뒤판 진동(암홀) 곡선 계산기</h2>
     <p class="desc">목표 콧수에 맞는 계단식 단평 패턴을 자동 생성합니다. 기본 규칙: 1~n 값을 각 3회씩 사용(기본합=3×(1+2+…+n)), 목표가 더 크면 1→2→3→…을 순환하며 하나씩 추가합니다.</p>
-
-    <img src="img/앞뒷장.png" alt="앞판/뒤판 도면" class="ref-img">
 
     <div class="row">
       <div class="field">
@@ -1447,13 +1436,6 @@
     fpWorksheet.setTarget(target);
     bpWorksheet.setTarget(target);
 
-    var topLabel = topCm + 'cm(' + topSt + '코) · 목' + neckCm + 'cm(' + neckSt + '코)';
-    var bottomLabel = bottomCm + 'cm(' + bottomSt + '코)';
-    document.getElementById('dg-fp-top').textContent = topLabel;
-    document.getElementById('dg-fp-bottom').textContent = bottomLabel;
-    document.getElementById('dg-bp-top').textContent = topLabel;
-    document.getElementById('dg-bp-bottom').textContent = bottomLabel;
-
     drawPanelSchematic(topCm, bottomCm, neckCm, topSt, bottomSt, neckSt);
 
     patternState.top = { cm: topCm, st: topSt };
@@ -1502,8 +1484,6 @@
     checkEl.className = 'check' + (sum === depthSt ? '' : ' bad');
     checkEl.textContent = '검산: 계단 합계 ' + sum + ' / 목표 ' + depthSt + (sum === depthSt ? ' ✓ 일치' : ' ✗ 불일치');
     resultBox.classList.add('show');
-
-    document.getElementById('dg-bp-depth').textContent = '목깊이 ' + depthCm + 'cm(' + depthSt + '코)';
 
     drawNeckSchematic(stair.steps, depthCm, depthSt);
 
