@@ -146,7 +146,8 @@
   .sch-line{ stroke:var(--sub); stroke-width:1; stroke-dasharray:3 3; }
   .sch-label{ fill:var(--ink); font-size:11px; font-weight:600; }
   .sch-label-sub{ fill:var(--sub); font-size:10px; }
-  .sch-step{ fill:none; stroke:var(--accent); stroke-width:2; }
+  .sch-step{ fill:none; stroke:var(--sub); stroke-width:1.5; stroke-dasharray:4 3; opacity:0.7; }
+  .sch-curve{ fill:none; stroke:var(--accent); stroke-width:2.5; stroke-linecap:round; }
   .final-svg{ max-width:760px; }
   .sch-title{ fill:var(--sub); font-size:12px; font-weight:700; letter-spacing:0.03em; }
   .sch-placeholder{ fill:var(--sub); opacity:0.5; }
@@ -954,7 +955,8 @@
     var maxSt = Math.max.apply(null, stepArr.concat([1]));
     var pxPerSt = 220 / maxSt;
     var rowH = Math.max(10, Math.min(20, 90 / stepArr.length));
-    var x = 20, y = 16;
+    var x0 = 20, y0 = 16;
+    var x = x0, y = y0;
     var d = 'M ' + x + ' ' + y;
     stepArr.forEach(function(s){
       var w = s * pxPerSt;
@@ -962,9 +964,12 @@
       x += w; y += rowH;
     });
     var vbH = y + 34;
+    // 계단이 근사하는 실제 곡선(완만한 목둘레 곡선)을 계단 위에 겹쳐 그린다
+    var curveD = 'M ' + x0 + ' ' + y0 + ' Q ' + x + ' ' + y0 + ' ' + x + ' ' + y;
     svg.setAttribute('viewBox', '0 0 ' + vbW + ' ' + vbH);
     svg.innerHTML =
       '<path class="sch-step" d="' + d + '"></path>' +
+      '<path class="sch-curve" d="' + curveD + '"></path>' +
       '<text class="sch-label-sub" x="16" y="' + (vbH - 12) + '">목깊이 ' + depthCm + 'cm(' + depthRows + '단) · 계단: ' + stepArr.join('-') + '</text>';
   }
 
