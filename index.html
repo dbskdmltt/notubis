@@ -451,84 +451,9 @@
     <div class="conv-out" id="conv-out">코수 / 단수 결과가 여기에 표시됩니다.</div>
   </section>
 
-  <!-- ===================== 코수/단수 분해 계산기 ===================== -->
-  <section id="shape-section">
-    <h2>⑤ 코수·단수 분해 계산기 <span class="badge">직선분해 / 곡선분해</span></h2>
-    <p class="desc">옆선·소매·진동 등에서 일정 구간에 늘림(또는 줄임)을 고르게 배분합니다. 시작·끝 조건에 맞는 방식을 선택하세요.</p>
-
-    <div class="row">
-      <div class="field" style="flex:1 1 100%;">
-        <label>시작 · 끝 조건</label>
-        <div class="seg" id="scenario-seg">
-          <button data-v="flat-flat" class="active">평평→평평 (양끝 평단)</button>
-          <button data-v="flat-action">평평→늘림지점 (끝이 늘림)</button>
-          <button data-v="diagonal">완전사선 (지늘아뜨기)</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- N: 코수 -->
-    <div class="row">
-      <div class="field" style="min-width:150px;">
-        <label>코수(늘림/줄임 수) 입력방식</label>
-        <div class="seg" id="n-mode-seg">
-          <button data-v="direct" class="active">코수 직접</button>
-          <button data-v="cm">cm으로</button>
-        </div>
-      </div>
-      <div class="field">
-        <label id="n-label">코수 (N)</label>
-        <input type="number" id="n-val" step="1" placeholder="예: 7">
-      </div>
-    </div>
-
-    <!-- R: 단수 -->
-    <div class="row" id="r-row">
-      <div class="field" style="min-width:150px;">
-        <label>단수(적용 구간) 입력방식</label>
-        <div class="seg" id="r-mode-seg">
-          <button data-v="direct" class="active">단수 직접</button>
-          <button data-v="cm">cm으로</button>
-        </div>
-      </div>
-      <div class="field">
-        <label id="r-label">단수 (R)</label>
-        <input type="number" id="r-val" step="1" placeholder="예: 50">
-      </div>
-    </div>
-
-    <!-- diagonal 전용: 고정 간격 -->
-    <div class="row" id="diag-row" style="display:none;">
-      <div class="field">
-        <label>고정 간격 (몇 단마다 늘림/줄임 하는 기법인지)</label>
-        <input type="number" id="diag-interval" value="2" min="1" step="1">
-      </div>
-    </div>
-
-    <!-- 직선/곡선 순서 -->
-    <div class="row" id="order-row">
-      <div class="field" style="flex:1 1 100%;">
-        <label>배분 순서</label>
-        <div class="seg" id="order-seg">
-          <button data-v="straight" class="active">직선분해 (횟수 적은 그룹 먼저)</button>
-          <button data-v="curve">곡선분해 (간격 넓은 그룹 먼저)</button>
-        </div>
-      </div>
-    </div>
-
-    <button class="calc-btn" id="shape-calc-btn">계산하기</button>
-
-    <div class="result" id="shape-result">
-      <div class="headline" id="shape-headline"></div>
-      <div class="steps" id="shape-steps"></div>
-      <ul class="groups" id="shape-groups"></ul>
-      <div class="check" id="shape-check"></div>
-    </div>
-  </section>
-
   <!-- ===================== 어깨경사줄임(되돌아뜨기) ===================== -->
   <section id="shoulder-section">
-    <h2>⑥ 어깨경사줄임 계산기 <span class="badge">정중줄임 / 되돌아뜨기</span></h2>
+    <h2>⑤ 어깨경사줄임 계산기 <span class="badge">정중줄임 / 되돌아뜨기</span></h2>
     <p class="desc">어깨 전체 줄임코를 막음코 + 되돌아뜨기 3단계로 나눕니다. (총×1/3 → 막음코, 나머지×1/2 → 1단마다, 나머지×2/3 → 2단마다, 최종 나머지 → 3단마다)</p>
 
     <div class="row">
@@ -577,7 +502,7 @@
 
   <!-- ===================== 목둘레 카브산줄임 ===================== -->
   <section id="neck-section">
-    <h2>⑦ 목둘레 커브(카브산) 줄임 계산기</h2>
+    <h2>⑥ 목둘레 커브(카브산) 줄임 계산기</h2>
     <p class="desc">고대콧수(목둘레 전체 콧수)로 중심막음코와 양쪽 카브산줄임코를 구하고, 삼각수 계단식(k, k-1, … , 1)으로 분해합니다.</p>
 
     <div class="row">
@@ -598,7 +523,7 @@
 
   <!-- ===================== 뒤판 진동(암홀) 곡선 ===================== -->
   <section id="armhole-section">
-    <h2>⑧ 뒤판 진동(암홀) 곡선 계산기</h2>
+    <h2>⑦ 뒤판 진동(암홀) 곡선 계산기</h2>
     <p class="desc">목표 콧수에 맞는 계단식 단평 패턴을 자동 생성합니다. 기본 규칙: 1~n 값을 각 3회씩 사용(기본합=3×(1+2+…+n)), 목표가 더 크면 1→2→3→…을 순환하며 하나씩 추가합니다.</p>
 
     <div class="row">
@@ -679,51 +604,7 @@
     document.getElementById(id).addEventListener('change', updateConversion);
   });
 
-  // ---------- 세그먼트 버튼 공통 ----------
-  function setupSeg(segId, onChange){
-    var seg = document.getElementById(segId);
-    var state = { value: seg.querySelector('button.active').dataset.v };
-    seg.querySelectorAll('button').forEach(function(btn){
-      btn.addEventListener('click', function(){
-        seg.querySelectorAll('button').forEach(function(b){ b.classList.remove('active'); });
-        btn.classList.add('active');
-        state.value = btn.dataset.v;
-        onChange(state.value);
-      });
-    });
-    return state;
-  }
-
-  var scenarioState = setupSeg('scenario-seg', function(v){
-    document.getElementById('diag-row').style.display = (v === 'diagonal') ? 'flex' : 'none';
-    document.getElementById('order-row').style.display = (v === 'diagonal') ? 'none' : 'flex';
-    document.getElementById('r-label').textContent = (v === 'diagonal') ? '단수 (R) — 전체 적용 구간' : '단수 (R)';
-  });
-  var nModeState = setupSeg('n-mode-seg', function(v){
-    document.getElementById('n-label').textContent = (v === 'cm') ? '가로 변화량 (cm)' : '코수 (N)';
-    document.getElementById('n-val').placeholder = (v === 'cm') ? '예: 2' : '예: 7';
-  });
-  var rModeState = setupSeg('r-mode-seg', function(v){
-    var lbl = document.getElementById('r-label');
-    lbl.textContent = (v === 'cm') ? '세로 길이 (cm)' : (scenarioState.value === 'diagonal' ? '단수 (R) — 전체 적용 구간' : '단수 (R)');
-    document.getElementById('r-val').placeholder = (v === 'cm') ? '예: 12' : '예: 50';
-  });
-  var orderState = setupSeg('order-seg', function(){});
-
-  function resolveN(){
-    var raw = parseFloat(document.getElementById('n-val').value);
-    if (isNaN(raw)) return null;
-    if (nModeState.value === 'cm') return Math.round(raw * gauge.stPerCm);
-    return Math.round(raw);
-  }
-  function resolveR(){
-    var raw = parseFloat(document.getElementById('r-val').value);
-    if (isNaN(raw)) return null;
-    if (rModeState.value === 'cm') return Math.round(raw * gauge.rwPerCm);
-    return Math.round(raw);
-  }
-
-  // ---------- 분해 계산 ----------
+  // ---------- 다단 분해(distribute) — 되돌아뜨기 균등분배에서 재사용 ----------
   function distribute(N, R, mode){
     // mode: 'flat-flat' | 'flat-action'
     var I = (mode === 'flat-flat') ? N + 1 : N;
@@ -752,123 +633,6 @@
 
     return { I: I, q: q, r: r, groups: groups, tail: tail };
   }
-
-  function orderGroups(groups, order){
-    var arr = groups.slice();
-    if (order === 'straight'){
-      arr.sort(function(a,b){ return a.count - b.count; }); // 횟수 적은 것 먼저
-    } else {
-      arr.sort(function(a,b){ return b.interval - a.interval; }); // 간격 넓은 것 먼저
-    }
-    return arr;
-  }
-
-  function renderGroups(listEl, groups, tail, actionLabel){
-    listEl.innerHTML = '';
-    groups.forEach(function(g, idx){
-      var li = document.createElement('li');
-      li.innerHTML = '<span>' + (idx+1) + '. ' + g.interval + '단마다 1코씩 ' + actionLabel + '</span><span>' + g.count + '회</span>';
-      listEl.appendChild(li);
-    });
-    if (tail){
-      var li2 = document.createElement('li');
-      li2.className = 'tail';
-      li2.innerHTML = '<span>마지막 평단(추가 동작 없음)</span><span>' + tail + '단</span>';
-      listEl.appendChild(li2);
-    }
-  }
-
-  document.getElementById('shape-calc-btn').addEventListener('click', function(){
-    var scenario = scenarioState.value;
-    var N = resolveN();
-    var R = resolveR();
-    var resultBox = document.getElementById('shape-result');
-    var headline = document.getElementById('shape-headline');
-    var steps = document.getElementById('shape-steps');
-    var groupsEl = document.getElementById('shape-groups');
-    var checkEl = document.getElementById('shape-check');
-
-    if (N === null || N <= 0 || R === null || R <= 0){
-      resultBox.classList.add('show');
-      headline.textContent = '입력값을 확인해주세요.';
-      headline.style.color = 'var(--warn)';
-      steps.textContent = '';
-      groupsEl.innerHTML = '';
-      checkEl.textContent = '';
-      return;
-    }
-    headline.style.color = 'var(--ok)';
-
-    if (scenario === 'diagonal'){
-      var interval = Math.max(1, Math.round(parseFloat(document.getElementById('diag-interval').value) || 2));
-      var times = Math.max(1, Math.round(R / interval));
-      var q2 = Math.floor(N / times);
-      var r2 = N % times;
-      var groups2 = [];
-      if (r2 > 0) groups2.push({ interval: q2 + 1, count: r2 });
-      if (times - r2 > 0) groups2.push({ interval: q2, count: times - r2 });
-      // 지늘아뜨기는 코수 기준 그룹이므로 큰 것부터 배열 (예: 6,6,6,6,5,5)
-      groups2.sort(function(a,b){ return b.interval - a.interval; });
-
-      headline.textContent = '완전사선(지늘아뜨기) 결과';
-      steps.textContent =
-        '코수(N) = ' + N + '\n' +
-        '단수(R) = ' + R + ', 기법 간격 = ' + interval + '단\n' +
-        '늘림/줄임 횟수 = R ÷ 간격 = ' + R + ' ÷ ' + interval + ' ≈ ' + times + '회\n' +
-        '코수를 횟수로 분배: ' + N + ' ÷ ' + times + ' = ' + q2 + ' 나머지 ' + r2;
-
-      var listHtml = '';
-      groups2.forEach(function(g, idx){
-        var li = document.createElement('li');
-        li.innerHTML = '<span>' + (idx+1) + '. 회당 ' + g.interval + '코씩</span><span>' + g.count + '회</span>';
-        groupsEl.appendChild(li);
-      });
-      groupsEl.innerHTML = '';
-      groups2.forEach(function(g, idx){
-        var li = document.createElement('li');
-        li.innerHTML = '<span>' + (idx+1) + '. 회당 ' + g.interval + '코씩</span><span>' + g.count + '회</span>';
-        groupsEl.appendChild(li);
-      });
-
-      var totalSt = groups2.reduce(function(s,g){ return s + g.interval * g.count; }, 0);
-      checkEl.textContent = '검산: 코수 합계 ' + totalSt + ' / 목표 ' + N + (totalSt === N ? ' ✓ 일치' : ' ✗ 불일치');
-      checkEl.className = 'check' + (totalSt === N ? '' : ' bad');
-      resultBox.classList.add('show');
-      return;
-    }
-
-    var mode = scenario; // 'flat-flat' | 'flat-action'
-    var d = distribute(N, R, mode);
-    if (!d){
-      headline.textContent = '코수(N)가 0보다 커야 합니다.';
-      headline.style.color = 'var(--warn)';
-      resultBox.classList.add('show');
-      return;
-    }
-    var ordered = orderGroups(d.groups, orderState.value);
-
-    headline.textContent = (mode === 'flat-flat' ? '평평→평평' : '평평→늘림지점') +
-      ' · ' + (orderState.value === 'straight' ? '직선분해' : '곡선분해') + ' 결과';
-
-    var intervalLabel = mode === 'flat-flat' ? 'N + 1 (양끝 평단이므로 간격수 = 코수+1)' : 'N (끝이 늘림지점이므로 간격수 = 코수)';
-    steps.textContent =
-      '코수(N) = ' + N + ', 단수(R) = ' + R + '\n' +
-      '간격수(I) = ' + intervalLabel + ' = ' + d.I + '\n' +
-      'R ÷ I = ' + R + ' ÷ ' + d.I + ' = ' + d.q + ' 나머지 ' + d.r +
-      (mode === 'flat-flat' ? '\n(마지막 평단을 만들기 위해 기준 그룹에서 1회를 떼어 tail로 사용)' : '');
-
-    renderGroups(groupsEl, ordered, d.tail, mode === 'flat-flat' ? '늘림/줄임' : '늘림/줄임');
-
-    var totalActions = ordered.reduce(function(s,g){ return s + g.count; }, 0);
-    var totalRows = ordered.reduce(function(s,g){ return s + g.interval * g.count; }, 0) + (d.tail || 0);
-    var okActions = totalActions === N;
-    var okRows = totalRows === R;
-    checkEl.className = 'check' + ((okActions && okRows) ? '' : ' bad');
-    checkEl.textContent = '검산: 동작 횟수 합계 ' + totalActions + '/' + N + (okActions?' ✓':' ✗') +
-      '  ·  단수 합계 ' + totalRows + '/' + R + (okRows?' ✓':' ✗');
-
-    resultBox.classList.add('show');
-  });
 
   // ---------- 어깨경사줄임(되돌아뜨기) ----------
   // 1/3 → 1/2 → 2/3 캐스케이드 (어깨경사줄임과 진동 곡선이 공유하는 공식)
