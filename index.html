@@ -298,12 +298,13 @@
   <!-- ===================== 진동(암홀) 공통 계산 ===================== -->
   <section id="armhole-common">
     <h2>진동(암홀) 줄임 <span class="badge">자동 계산</span></h2>
-    <p class="desc">고대콧수(진동에서 줄일 총 콧수)를 입력하면 막음코 × 1/3 → 나머지 × 1/2 → 나머지 × 2/3 순으로 나눠 되돌아뜨기 단계를 만듭니다. 앞장·뒷장에 동일하게 적용됩니다.</p>
+    <p class="desc">진동깊이를 입력하면 총장에서 옆선을 곧게 뜨는 구간과 진동이 시작되는 단을 계산합니다. 고대콧수(진동에서 줄일 총 콧수)를 입력하면 막음코 × 1/3 → 나머지 × 1/2 → 나머지 × 2/3 순으로 나눠 되돌아뜨기 단계를 만듭니다. 앞장·뒷장에 동일하게 적용됩니다.</p>
+    <div class="desc" style="margin:-4px 0 10px;">성인 여성 진동깊이 참고치: S 19~20cm · M 20~21cm · L 21~22cm · XL 22~23cm</div>
 
     <div class="row">
       <div class="field">
-        <label>암홀길이 (cm)</label>
-        <input type="number" id="ac-length" step="0.1" placeholder="예: 20">
+        <label>진동깊이 (cm)</label>
+        <input type="number" id="ac-length" step="0.1" placeholder="예: 21">
       </div>
       <div class="field">
         <label>고대콧수 (진동 줄임 콧수)</label>
@@ -316,6 +317,7 @@
       <div class="headline" id="ac-headline"></div>
       <div class="steps" id="ac-steps"></div>
       <ul class="groups" id="ac-groups"></ul>
+      <div class="tier-target" id="ac-notation"></div>
       <div class="check" id="ac-check"></div>
     </div>
   </section>
@@ -470,6 +472,7 @@
       <div class="headline" id="sh-headline"></div>
       <div class="steps" id="sh-steps"></div>
       <ul class="groups" id="sh-groups"></ul>
+      <div class="tier-target" id="sh-notation"></div>
       <div class="check" id="sh-check"></div>
     </div>
 
@@ -695,6 +698,12 @@
       li.innerHTML = '<span>' + r.label + '</span><span>' + r.tag + '</span>';
       groupsEl.appendChild(li);
     });
+
+    var notationParts = [];
+    if (tier1 > 0) notationParts.push('1-1-' + tier1);
+    if (tier2 > 0) notationParts.push('2-1-' + tier2);
+    if (tier3 > 0) notationParts.push('3-1-' + tier3);
+    document.getElementById('sh-notation').textContent = '표기: 막음 ' + bindOff + '코 → ' + notationParts.join(', ') + ' (단-코-회)';
 
     var sum = bindOff + tier1 + tier2 + tier3;
     checkEl.className = 'check' + (sum === total ? '' : ' bad');
@@ -1243,6 +1252,15 @@
   });
 
   // ---------- 진동(암홀) 공통 계산: 고대콧수 → 1/3→1/2→2/3 캐스케이드 ----------
+  // 캐스케이드 결과를 "1-1-4, 2-1-2, 3-1-2" 형태(단-코-회)의 축약 표기로 변환
+  function cascadeNotation(casc){
+    var parts = [];
+    if (casc.tier1 > 0) parts.push('1-1-' + casc.tier1);
+    if (casc.tier2 > 0) parts.push('2-1-' + casc.tier2);
+    if (casc.tier3 > 0) parts.push('3-1-' + casc.tier3);
+    return parts.join(', ');
+  }
+
   document.getElementById('ac-calc-btn').addEventListener('click', function(){
     var lenCm = parseFloat(document.getElementById('ac-length').value);
     var total = Math.round(parseFloat(document.getElementById('ac-total').value));
@@ -1251,12 +1269,13 @@
     var steps = document.getElementById('ac-steps');
     var groupsEl = document.getElementById('ac-groups');
     var checkEl = document.getElementById('ac-check');
+    var notationEl = document.getElementById('ac-notation');
 
     if (isNaN(total) || total <= 0){
       resultBox.classList.add('show');
       headline.textContent = '고대콧수(진동 줄임 콧수)를 입력해주세요.';
       headline.style.color = 'var(--warn)';
-      steps.textContent = ''; groupsEl.innerHTML = ''; checkEl.textContent = '';
+      steps.textContent = ''; groupsEl.innerHTML = ''; checkEl.textContent = ''; notationEl.textContent = '';
       patternState.armhole = null;
       renderFinalSchematic();
       return;
@@ -1266,9 +1285,18 @@
     var lenRows = (!isNaN(lenCm) && lenCm > 0) ? Math.round(lenCm * gauge.rwPerCm) : null;
     var casc = cascadeThirds(total);
 
+    var sideRowsText = '';
+    if (lenRows != null && patternState.length){
+      var sideRows = patternState.length.rows - lenRows;
+      sideRowsText = '옆선(곧게 뜨는 구간) = 전체단수 - 진동단수 = ' + patternState.length.rows + ' - ' + lenRows + ' = ' + sideRows + '단\n' +
+        '진동 시작 단 = ' + (sideRows + 1) + '단째부터\n';
+      patternState.sideRows = sideRows;
+    }
+
     headline.textContent = '진동(암홀) 줄임 결과';
     steps.textContent =
-      (lenRows != null ? '암홀길이 = ' + lenCm + 'cm → ' + lenRows + '단 (참고용)\n' : '') +
+      (lenRows != null ? '진동깊이 = ' + lenCm + 'cm → ' + lenRows + '단\n' : '') +
+      sideRowsText +
       '고대콧수 = ' + total + '\n' +
       '중심막음 = 고대콧수 × 1/3 = ' + casc.bindOff + ' (버림)\n' +
       '남은코 = ' + total + ' - ' + casc.bindOff + ' = ' + casc.rem1 + '\n' +
@@ -1289,6 +1317,8 @@
       li.innerHTML = '<span>' + r[0] + '</span><span>' + r[1] + '</span>';
       groupsEl.appendChild(li);
     });
+
+    notationEl.textContent = '표기: 막음 ' + casc.bindOff + '코 → ' + cascadeNotation(casc) + ' (단-코-회)';
 
     var sum = casc.bindOff + casc.tier1 + casc.tier2 + casc.tier3;
     var ok = sum === total;
