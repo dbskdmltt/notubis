@@ -339,6 +339,7 @@
       <div class="headline" id="fp-headline"></div>
       <div class="steps" id="fp-steps"></div>
       <ul class="groups" id="fp-groups"></ul>
+      <div class="tier-target" id="fp-notation"></div>
       <div class="check" id="fp-check"></div>
       <svg id="fp-neck-svg" class="schematic-svg" viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
@@ -359,6 +360,7 @@
       <div class="headline" id="bp-headline"></div>
       <div class="steps" id="bp-steps"></div>
       <ul class="groups" id="bp-groups"></ul>
+      <div class="tier-target" id="bp-notation"></div>
       <div class="check" id="bp-check"></div>
       <svg id="neck-svg" class="schematic-svg" viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
@@ -1349,6 +1351,17 @@
 
   // ---------- 뒷장: 목깊이 → 목둘레 곡선(333222111 순환확장 방식) ----------
   // ---------- 목둘레 곡선 (앞장·뒷장 공용, 목깊이는 단수로 환산) ----------
+  // 목둘레 계단 시퀀스(예: 4,4,4,3,3,3,2,2,2,2,1,1,1,1)를 "1-4-3, 1-3-3, 1-2-4, 1-1-4"(단-코-회) 축약 표기로 변환
+  function neckStepNotation(stepArr){
+    var counts = {};
+    var order = [];
+    stepArr.forEach(function(s){
+      if (!(s in counts)){ counts[s] = 0; order.push(s); }
+      counts[s]++;
+    });
+    return order.map(function(v){ return '1-' + v + '-' + counts[v]; }).join(', ');
+  }
+
   function computeNeckCurve(prefix, svgId, panelLabel, stateKey){
     var depthCm = parseFloat(document.getElementById(prefix + '-depth').value);
     var resultBox = document.getElementById(prefix + '-result');
@@ -1356,12 +1369,14 @@
     var steps = document.getElementById(prefix + '-steps');
     var groupsEl = document.getElementById(prefix + '-groups');
     var checkEl = document.getElementById(prefix + '-check');
+    var notationEl = document.getElementById(prefix + '-notation');
 
     if (isNaN(depthCm) || depthCm <= 0){
       resultBox.classList.add('show');
       headline.textContent = '목깊이를 입력해주세요.';
       headline.style.color = 'var(--warn)';
       steps.textContent = ''; groupsEl.innerHTML = ''; checkEl.textContent = '';
+      if (notationEl) notationEl.textContent = '';
       return;
     }
     headline.style.color = 'var(--ok)';
@@ -1380,6 +1395,8 @@
     var li0 = document.createElement('li');
     li0.innerHTML = '<span>단계 시퀀스 (스텝 수 ' + res.steps.length + ')</span><span>' + res.steps.join(', ') + '</span>';
     groupsEl.appendChild(li0);
+
+    if (notationEl) notationEl.textContent = '표기: ' + neckStepNotation(res.steps) + ' (단-코-회)';
 
     var ok = res.achieved === depthRows;
     checkEl.className = 'check' + (ok ? '' : ' bad');
