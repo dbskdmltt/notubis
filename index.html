@@ -319,6 +319,7 @@
       <ul class="groups" id="ac-groups"></ul>
       <div class="tier-target" id="ac-notation"></div>
       <div class="check" id="ac-check"></div>
+      <svg id="ac-svg" class="schematic-svg" viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
   </section>
 
@@ -474,6 +475,7 @@
       <ul class="groups" id="sh-groups"></ul>
       <div class="tier-target" id="sh-notation"></div>
       <div class="check" id="sh-check"></div>
+      <svg id="sh-svg" class="schematic-svg" viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
 
     <div class="subblock" id="sb-block">
@@ -704,6 +706,7 @@
     if (tier2 > 0) notationParts.push('2-1-' + tier2);
     if (tier3 > 0) notationParts.push('3-1-' + tier3);
     document.getElementById('sh-notation').textContent = '표기: 막음 ' + bindOff + '코 → ' + notationParts.join(', ') + ' (단-코-회)';
+    drawCascadeSchematic({ bindOff: bindOff, tier1: tier1, tier2: tier2, tier3: tier3 }, 'sh-svg');
 
     var sum = bindOff + tier1 + tier2 + tier3;
     checkEl.className = 'check' + (sum === total ? '' : ' bad');
@@ -981,6 +984,36 @@
       '<path class="sch-step" d="' + d + '"></path>' +
       '<path class="sch-curve" d="' + curveD + '"></path>' +
       '<text class="sch-label-sub" x="16" y="' + (vbH - 12) + '">목깊이 ' + depthCm + 'cm(' + depthRows + '단) · 계단: ' + stepArr.join('-') + '</text>';
+  }
+
+  // 1/3→1/2→2/3 캐스케이드(막음코+3단계)를 계단+곡선 그래프로 시각화 (어깨경사줄임, 진동 공용)
+  function drawCascadeSchematic(casc, svgId){
+    var svg = document.getElementById(svgId);
+    if (!svg) return;
+    var steps = [];
+    if (casc.bindOff > 0) steps.push({ w: casc.bindOff, h: 8 });
+    for (var i = 0; i < casc.tier1; i++) steps.push({ w: 1, h: 5 });
+    for (var i = 0; i < casc.tier2; i++) steps.push({ w: 1, h: 9 });
+    for (var i = 0; i < casc.tier3; i++) steps.push({ w: 1, h: 13 });
+
+    if (steps.length === 0){ svg.innerHTML = ''; return; }
+
+    var totalW = steps.reduce(function(s, st){ return s + st.w; }, 0);
+    var pxPerUnit = Math.min(220 / Math.max(totalW, 1), 30);
+    var x0 = 20, y0 = 16;
+    var x = x0, y = y0;
+    var d = 'M ' + x + ' ' + y;
+    steps.forEach(function(s){
+      var w = s.w * pxPerUnit;
+      d += ' h ' + w + ' v ' + s.h;
+      x += w; y += s.h;
+    });
+    var vbH = y + 24;
+    var curveD = 'M ' + x0 + ' ' + y0 + ' Q ' + x + ' ' + y0 + ' ' + x + ' ' + y;
+    svg.setAttribute('viewBox', '0 0 320 ' + vbH);
+    svg.innerHTML =
+      '<path class="sch-step" d="' + d + '"></path>' +
+      '<path class="sch-curve" d="' + curveD + '"></path>';
   }
 
   function drawSleeveSchematic(lenCm, topCm, bottomCm, lenRows, topSt, bottomSt){
@@ -1319,6 +1352,7 @@
     });
 
     notationEl.textContent = '표기: 막음 ' + casc.bindOff + '코 → ' + cascadeNotation(casc) + ' (단-코-회)';
+    drawCascadeSchematic(casc, 'ac-svg');
 
     var sum = casc.bindOff + casc.tier1 + casc.tier2 + casc.tier3;
     var ok = sum === total;
