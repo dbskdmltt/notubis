@@ -1045,10 +1045,10 @@
     if (!ah) return '계산 필요';
     var c = ah.cascade;
     var parts = [];
-    if (c.bindOff > 0) parts.push(c.bindOff + '코(막음)');
-    if (c.tier1 > 0) parts.push('1단×' + c.tier1 + '회');
-    if (c.tier2 > 0) parts.push('2단×' + c.tier2 + '회');
-    if (c.tier3 > 0) parts.push('3단×' + c.tier3 + '회');
+    if (c.bindOff > 0) parts.push('막음' + c.bindOff);
+    if (c.tier1 > 0) parts.push('1-1-' + c.tier1);
+    if (c.tier2 > 0) parts.push('2-1-' + c.tier2);
+    if (c.tier3 > 0) parts.push('3-1-' + c.tier3);
     return parts.join(', ');
   }
   function stepSeqText(steps){
@@ -1077,6 +1077,9 @@
     parts.push('<text class="sch-label" x="' + cx + '" y="' + (hemY + 18) + '" text-anchor="middle">가슴너비 ' + fmtSt(body) + '</text>');
     if (depth){
       parts.push('<text class="sch-label-sub" x="' + cx + '" y="' + (topY + 20) + '" text-anchor="middle">목깊이 ' + fmtRow(depth) + '</text>');
+      if (depth.steps){
+        parts.push('<text class="sch-label-sub" x="' + cx + '" y="' + (topY + 32) + '" text-anchor="middle">' + neckStepNotation(depth.steps) + '</text>');
+      }
     }
     parts.push('<text class="sch-label-sub" x="' + cx + '" y="' + (hemY + 34) + '" text-anchor="middle">진동: ' + armholeSummaryText(armhole) + '</text>');
     return parts.join('');
