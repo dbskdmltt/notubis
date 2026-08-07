@@ -244,7 +244,7 @@
         <input type="number" id="fit-sleeve" step="0.1" placeholder="예: 55">
       </div>
       <div class="field">
-        <label>총장 (cm, 선택 — 그림 높이용)</label>
+        <label>총장 (cm, 선택)</label>
         <input type="number" id="fit-length" step="0.1" placeholder="예: 58">
       </div>
     </div>
@@ -256,6 +256,7 @@
       <div class="steps" id="fit-steps"></div>
       <div class="row" style="margin-top:8px;">
         <button class="calc-btn secondary" id="fit-apply-bottom" type="button">↓ 가로길이(STEP 3)에 적용</button>
+        <button class="calc-btn secondary" id="fit-apply-length" type="button">↓ 전체길이(STEP 3)에 적용</button>
         <button class="calc-btn secondary" id="fit-apply-sleeve" type="button">↓ 소매기장(소매 탭)에 적용</button>
       </div>
     </div>
@@ -1520,6 +1521,7 @@
 
   var fitFinishedChest = null;
   var fitSleeveLen = null;
+  var fitTotalLength = null;
 
   document.getElementById('fit-calc-btn').addEventListener('click', function(){
     var chest = parseFloat(document.getElementById('fit-chest').value);
@@ -1542,18 +1544,26 @@
 
     fitFinishedChest = chest + ease;
     fitSleeveLen = (!isNaN(sleeve) && sleeve > 0) ? sleeve : null;
+    fitTotalLength = (!isNaN(lengthCm) && lengthCm > 0) ? lengthCm : null;
 
     headline.textContent = '완성 치수 결과';
     headline.style.color = 'var(--ok)';
     steps.textContent =
       '완성 가슴둘레 = 실측 ' + chest + 'cm + 여유분 ' + ease + 'cm = ' + fitFinishedChest + 'cm' +
-      (fitSleeveLen != null ? '\n소매길이 = ' + fitSleeveLen + 'cm (그대로 사용)' : '');
+      (fitSleeveLen != null ? '\n소매길이 = ' + fitSleeveLen + 'cm (그대로 사용)' : '') +
+      (fitTotalLength != null ? '\n총장 = ' + fitTotalLength + 'cm (그대로 사용)' : '');
     resultBox.classList.add('show');
   });
 
   document.getElementById('fit-apply-bottom').addEventListener('click', function(){
     if (fitFinishedChest == null) return;
     document.getElementById('pc-bottom').value = fitFinishedChest;
+    document.getElementById('panel-common').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  document.getElementById('fit-apply-length').addEventListener('click', function(){
+    if (fitTotalLength == null) return;
+    document.getElementById('pc-top').value = fitTotalLength;
     document.getElementById('panel-common').scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
